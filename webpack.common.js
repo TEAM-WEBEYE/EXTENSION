@@ -54,6 +54,7 @@ module.exports = {
                 { from: "public/popup.html", to: "../" },
                 { from: "public/manifest.json", to: "../" },
                 { from: "public/icons", to: "../icons" },
+                { from: "src/assets/fonts", to: "../assets/fonts" },
             ],
         }),
     ],
