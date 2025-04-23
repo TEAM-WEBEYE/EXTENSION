@@ -3,7 +3,3 @@
 @tailwind utilities;
 
 @import "./fonts.css";
-
-body {
-    @apply bg-gray-200;
-}
