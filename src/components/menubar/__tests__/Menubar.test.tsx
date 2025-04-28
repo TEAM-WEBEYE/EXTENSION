@@ -57,7 +57,7 @@ describe("Menubar", () => {
             </Menubar>,
         );
 
-        const overlay = container.querySelector(".div");
+        const overlay = container.querySelector(".overlay");
         expect(overlay).not.toBeNull();
         if (overlay) {
             fireEvent.click(overlay);
