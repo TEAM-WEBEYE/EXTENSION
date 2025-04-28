@@ -9,7 +9,7 @@ exports[`component renders 1`] = `
     <button
       className="font-32-Bold font-koddi cursor-pointer flex items-center rounded-[14px] w-[420px] h-[80px] p-5 css-1n8pabm"
     >
-      최호
+      버튼
     </button>
   </div>
 </div>
