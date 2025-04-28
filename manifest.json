@@ -1,0 +1,51 @@
+{
+    "manifest_version": 3,
+    "name": "Chrome Extension",
+    "version": "1.0.0",
+    "description": "Chrome Extension with React",
+    "action": {
+        "default_title": "Click to open popup",
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png",
+            "48": "icons/icon-48.png",
+            "128": "icons/icon-128.png"
+        }
+    },
+    "background": {
+        "service_worker": "js/backgroundPage.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["js/content.js"],
+            "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "js/injected.js",
+                "icons/icon.png",
+                "assets/images/*",
+                "iframe.html"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "icons": {
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    },
+    "host_permissions": ["<all_urls>"],
+    "permissions": [
+        "scripting",
+        "activeTab",
+        "storage",
+        "tabs",
+        "desktopCapture"
+    ]
+}
