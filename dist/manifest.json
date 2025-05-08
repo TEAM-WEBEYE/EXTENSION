@@ -1,0 +1,55 @@
+{
+    "manifest_version": 3,
+    "name": "voim",
+    "version": "1.0.0",
+    "description": "Chrome Extension with React",
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["js/content.js"],
+            "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "js/iframe.js",
+                "icons/icon.png",
+                "images/cursors/*.png",
+                "iframe.html"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "icons": {
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    },
+    "host_permissions": ["<all_urls>"],
+    "permissions": ["scripting", "activeTab", "storage", "tabs"],
+    "commands": {
+        "toggle_iframe": {
+            "suggested_key": {
+                "default": "Alt+V",
+                "mac": "Alt+V"
+            },
+            "description": "Toggle floating iframe"
+        },
+        "toggle-modal": {
+            "suggested_key": {
+                "default": "Alt+O",
+                "mac": "Alt+O"
+            },
+            "description": "모달 열기/닫기"
+        },
+        "toggle-all-features": {
+            "suggested_key": {
+                "default": "Alt+A",
+                "mac": "Alt+A"
+            },
+            "description": "테마와 커서 동시 토글"
+        }
+    }
+}

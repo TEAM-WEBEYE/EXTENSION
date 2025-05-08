@@ -1,30 +1,9 @@
-## Description
+## 🧐 체크리스트
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
-
-Fixes # (issue)
-
-## Type of change
-
-Please delete options that are not relevant.
-
--   [ ] Bug fix (non-breaking change which fixes an issue)
--   [ ] New feature (non-breaking change which adds functionality)
--   [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
--   [ ] This change requires a documentation update
-
-## How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
-
-## Checklist:
-
--   [ ] My code follows the style guidelines of this project
--   [ ] I have performed a self-review of my own code
--   [ ] I have commented my code, particularly in hard-to-understand areas
--   [ ] I have made corresponding changes to the documentation
--   [ ] My changes generate no new warnings
--   [ ] I have added tests that prove my fix is effective or that my feature works
--   [ ] New and existing unit tests pass locally with my changes
--   [ ] Any dependent changes have been merged and published in downstream modules
--   [ ] I have checked my code and corrected any misspellings
+-   [ ] **코드 실행 확인**: `yarn build` 또는 `npm run build` 실행 후 정상적으로 동작하는지 확인했나요?
+-   [ ] **테스트 통과 여부**: Jest 테스트를 실행했고 모든 테스트가 통과했나요? (`yarn test`)
+-   [ ] **ESLint & Prettier 검사**: `yarn lint` 및 `yarn prettify` 실행 후 문제가 없나요?
+-   [ ] **PR 제목 확인**: PR 제목이 `feat:`, `fix:`, `chore:` 등 커밋 컨벤션을 따르고 있나요?
+-   [ ] **변경 사항 설명**: PR 설명에 변경된 내용을 충분히 작성했나요?
+-   [ ] **리뷰어가 이해하기 쉽게 작성**: 코드 리뷰어가 쉽게 이해할 수 있도록 가독성 높은 코드를 작성했나요?
+-   [ ] **문서 업데이트 필요 여부**: 기능 추가/변경 사항이 있다면 `README.md` 또는 관련 문서를 업데이트했나요?
