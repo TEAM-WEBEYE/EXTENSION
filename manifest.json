@@ -19,7 +19,8 @@
                 "js/iframe.js",
                 "icons/icon.png",
                 "images/cursors/*.png",
-                "iframe.html"
+                "iframe.html",
+                "images/search.png"
             ],
             "matches": ["<all_urls>"]
         }
