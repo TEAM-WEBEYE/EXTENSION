@@ -1,0 +1,1 @@
+export { CursorTab } from "./component";
