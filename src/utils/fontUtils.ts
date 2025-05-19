@@ -38,8 +38,25 @@ export const fontWeightClassMap: Record<FontWeight, string> = {
 };
 
 export function getFontClasses(fontSize: FontSize, fontWeight: FontWeight) {
+    if (!fontSize || !fontWeight) {
+        return {
+            fontHeading: "text-[28px] font-bold",
+            fontCommon: "text-[24px] font-bold",
+            fontCaption: "text-[20px] font-bold",
+        };
+    }
+
     const base = fontSizeClassMap[fontSize];
     const weight = fontWeightClassMap[fontWeight];
+
+    if (!base || !weight) {
+        return {
+            fontHeading: "text-[28px] font-bold",
+            fontCommon: "text-[24px] font-bold",
+            fontCaption: "text-[20px] font-bold",
+        };
+    }
+
     return {
         fontHeading: `${base.heading} ${weight}`,
         fontCommon: `${base.common} ${weight}`,

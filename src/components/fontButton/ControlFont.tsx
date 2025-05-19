@@ -62,14 +62,6 @@ const ControlFont = () => {
         }
     }, [fontWeight, fontSize]);
 
-    function isValidFontWeight(value: string): value is UppercaseFontWeight {
-        return ["REGULAR", "BOLD", "XBOLD"].includes(value);
-    }
-
-    function isValidFontSize(value: string): value is UppercaseFontSize {
-        return ["XS", "S", "M", "L", "XL"].includes(value);
-    }
-
     const sendMessage = (type: string) => {
         chrome.runtime.sendMessage({ type }, (response) => {
             if (chrome.runtime.lastError) {
@@ -86,7 +78,7 @@ const ControlFont = () => {
 
         if (chrome?.storage?.sync) {
             chrome.storage.sync
-                .set({ "font-weight": toFontWeight(value) })
+                .set({ fontWeight: toFontWeight(value) })
                 .catch((err) => console.error("폰트 굵기 저장 오류:", err));
         }
 
@@ -102,7 +94,7 @@ const ControlFont = () => {
 
         if (chrome?.storage?.sync) {
             chrome.storage.sync
-                .set({ "font-size": toFontSize(value) })
+                .set({ fontSize: toFontSize(value) })
                 .catch((err) => console.error("폰트 크기 저장 오류:", err));
         }
 

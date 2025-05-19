@@ -4,7 +4,9 @@ import { applyFontStyle, applyModeStyle } from "../styles";
 import {
     removeAllStyles,
     restoreAllStyles,
-    saveSettings,
+    saveFontSize,
+    saveFontWeight,
+    saveThemeMode,
 } from "../storage/settingsManager";
 
 export const handleStyleMessage = (
@@ -37,18 +39,18 @@ export const handleStyleMessage = (
             const fontSizeType = type as FontSizeType;
             const fontSize = fontSizeMap[fontSizeType];
             applyFontStyle({ fontSize });
-            saveSettings({ fontSize });
+            saveFontSize(fontSize);
             sendResponse({ success: true });
         } else if (Object.keys(fontWeightMap).includes(type as string)) {
             const fontWeightType = type as FontWeightType;
             const fontWeight = fontWeightMap[fontWeightType];
             applyFontStyle({ fontWeight });
-            saveSettings({ fontWeight });
+            saveFontWeight(fontWeight);
             sendResponse({ success: true });
         } else if (type === "SET_MODE_LIGHT" || type === "SET_MODE_DARK") {
             const modeType = type as ModeType;
             applyModeStyle(modeType);
-            saveSettings({ mode: modeType });
+            saveThemeMode(modeType);
             sendResponse({ success: true });
         } else if (type === "DISABLE_ALL_STYLES") {
             removeAllStyles();

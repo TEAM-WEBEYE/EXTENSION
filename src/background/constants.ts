@@ -27,8 +27,7 @@ export const STORAGE_KEYS = {
     CURSOR_THEME: "cursorTheme",
     CURSOR_SIZE: "cursorSize",
     IS_CURSOR_ENABLED: "isCursorEnabled",
-    USER_SETTINGS: "userSettings",
-    THEME_MODE: "theme-mode",
-    FONT_SIZE: "font-size",
-    FONT_WEIGHT: "font-weight",
+    THEME_MODE: "themeMode",
+    FONT_SIZE: "fontSize",
+    FONT_WEIGHT: "fontWeight",
 };
