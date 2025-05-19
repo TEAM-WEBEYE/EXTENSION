@@ -163,7 +163,7 @@ class SettingsService {
                             type: "UPDATE_CURSOR",
                             isCursorEnabled: DEFAULT_CURSOR_ENABLED,
                             cursorUrl: chrome.runtime.getURL(
-                                `cursors/${DEFAULT_CURSOR_THEME}_${DEFAULT_CURSOR_SIZE}.png`,
+                                `images/cursors/${DEFAULT_CURSOR_THEME}_${DEFAULT_CURSOR_SIZE}.png`,
                             ),
                         })
                         .catch(() => {});
