@@ -1,5 +1,4 @@
 import { logger } from "@src/utils/logger";
-import { standaloneToggleIframe } from "./toggleIframeFuncs";
 
 /**
  * iframe 관련 서비스
