@@ -96,7 +96,124 @@ export function initCommandListeners(): void {
                     await iframeService.toggleIframeInActiveTab();
                 }
             } else if (command === "toggle-modal") {
-                await iframeService.toggleModalInActiveTab();
+                const tabs = await chrome.tabs.query({
+                    active: true,
+                    currentWindow: true,
+                });
+                if (tabs[0]?.id) {
+                    await chrome.scripting.executeScript({
+                        target: { tabId: tabs[0].id },
+                        func: function () {
+                            const iframeId = "floating-button-extension-iframe";
+                            let iframe = document.getElementById(
+                                iframeId,
+                            ) as HTMLIFrameElement;
+                            let wasCreated = false;
+
+                            function createIframe() {
+                                const newIframe =
+                                    document.createElement("iframe");
+                                newIframe.id = iframeId;
+                                newIframe.src =
+                                    chrome.runtime.getURL("iframe.html");
+
+                                newIframe.style.position = "fixed";
+                                newIframe.style.top = "70px";
+                                newIframe.style.right = "20px";
+                                newIframe.style.width = "65px";
+                                newIframe.style.height = "65px";
+                                newIframe.style.border = "none";
+                                newIframe.style.background = "transparent";
+                                newIframe.style.zIndex = "2147483647";
+
+                                return newIframe;
+                            }
+
+                            function setupResizeHandler(
+                                iframe: HTMLIFrameElement,
+                            ) {
+                                const handleMessage = function (
+                                    event: MessageEvent,
+                                ) {
+                                    if (event.source !== iframe.contentWindow)
+                                        return;
+
+                                    if (event.data.type === "RESIZE_IFRAME") {
+                                        if (event.data.isOpen) {
+                                            iframe.style.width = "100%";
+                                            iframe.style.height = "100%";
+                                            iframe.style.top = "0";
+                                            iframe.style.right = "0";
+                                        } else {
+                                            iframe.style.width = "65px";
+                                            iframe.style.height = "65px";
+                                            iframe.style.top = "70px";
+                                            iframe.style.right = "20px";
+                                        }
+                                    }
+                                };
+
+                                window.addEventListener(
+                                    "message",
+                                    handleMessage,
+                                );
+                            }
+
+                            function setupModalCloseHandler(
+                                iframe: HTMLIFrameElement,
+                                wasCreated: boolean,
+                            ) {
+                                const modalCloseListener = function (
+                                    event: MessageEvent,
+                                ) {
+                                    if (event.source !== iframe.contentWindow)
+                                        return;
+
+                                    if (
+                                        event.data.type === "RESIZE_IFRAME" &&
+                                        !event.data.isOpen &&
+                                        wasCreated
+                                    ) {
+                                        iframe.remove();
+                                        window.removeEventListener(
+                                            "message",
+                                            modalCloseListener,
+                                        );
+                                    }
+                                };
+
+                                window.addEventListener(
+                                    "message",
+                                    modalCloseListener,
+                                );
+                            }
+
+                            function toggleModal(iframe: HTMLIFrameElement) {
+                                if (iframe.contentWindow) {
+                                    iframe.contentWindow.postMessage(
+                                        { type: "TOGGLE_MODAL" },
+                                        "*",
+                                    );
+                                }
+                            }
+
+                            if (!iframe) {
+                                wasCreated = true;
+                                iframe = createIframe();
+                                setupResizeHandler(iframe);
+                                document.body.appendChild(iframe);
+
+                                iframe.onload = function () {
+                                    toggleModal(iframe);
+                                };
+                            } else {
+                                toggleModal(iframe);
+                            }
+
+                            setupModalCloseHandler(iframe, wasCreated);
+                        },
+                    });
+                }
             } else if (command === "toggle-cursor") {
                 await cursorService.toggleCursor();
             } else if (command === "toggle-all-features") {
