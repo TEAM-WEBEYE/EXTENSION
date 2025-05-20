@@ -8,6 +8,7 @@ import {
     DEFAULT_FONT_SIZE,
     DEFAULT_FONT_WEIGHT,
     DEFAULT_THEME,
+    STORAGE_KEYS,
 } from "../constants";
 import { logger } from "@src/utils/logger";
 
@@ -16,12 +17,51 @@ import { logger } from "@src/utils/logger";
  */
 class SettingsService {
     private areStylesEnabled: boolean = true;
+    private isIframeVisible: boolean = true;
 
     /**
      * 스타일 활성화 상태를 반환합니다.
      */
     areStylesActive(): boolean {
         return this.areStylesEnabled;
+    }
+
+    /**
+     * iframe 가시성 상태를 반환합니다.
+     */
+    isIframeActive(): boolean {
+        return this.isIframeVisible;
+    }
+
+    /**
+     * iframe 가시성 상태를 설정합니다.
+     */
+    async setIframeVisible(visible: boolean): Promise<void> {
+        try {
+            this.isIframeVisible = visible;
+            await chrome.storage.sync.set({ iframeVisible: visible });
+
+            // 활성 탭에 iframe 가시성 상태 전달
+            const tabs = await chrome.tabs.query({ active: true });
+            for (const tab of tabs) {
+                if (tab.id) {
+                    try {
+                        await chrome.tabs.sendMessage(tab.id, {
+                            type: "SET_IFRAME_VISIBILITY",
+                            isVisible: visible,
+                        });
+                    } catch (e) {
+                        logger.warn(
+                            `탭 ${tab.id}에 iframe 가시성 상태 전송 실패`,
+                            e,
+                        );
+                    }
+                }
+            }
+        } catch (error) {
+            logger.error("iframe 가시성 상태 설정 중 오류:", error);
+            throw error;
+        }
     }
 
     /**
@@ -38,6 +78,13 @@ class SettingsService {
         try {
             // 먼저 스토리지 초기화
             await storageService.resetAllSettings();
+
+            // iframe 가시성은 유지 (변경하지 않음)
+            const currentIframeVisibility = await chrome.storage.sync.get([
+                STORAGE_KEYS.IFRAME_VISIBLE,
+            ]);
+            const isIframeVisible =
+                currentIframeVisibility[STORAGE_KEYS.IFRAME_VISIBLE] ?? true;
 
             // 커서 설정 초기화
             cursorService.setCursorTheme(DEFAULT_CURSOR_THEME);
@@ -58,7 +105,7 @@ class SettingsService {
                         // 잠시 대기 후 새로운 설정 적용
                         await new Promise((resolve) => setTimeout(resolve, 50));
 
-                        // 새로운 설정 적용
+                        // 새로운 설정 적용 (iframe 가시성은 현재 상태 유지)
                         await chrome.tabs.sendMessage(tab.id, {
                             type: "APPLY_SETTINGS",
                             settings: {
@@ -68,6 +115,7 @@ class SettingsService {
                                 cursorTheme: DEFAULT_CURSOR_THEME,
                                 cursorSize: DEFAULT_CURSOR_SIZE,
                                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
+                                isIframeVisible: isIframeVisible,
                             },
                         });
                     } catch (e) {

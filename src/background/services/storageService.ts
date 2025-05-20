@@ -20,6 +20,7 @@ class StorageService {
         isCursorEnabled: boolean;
         cursorSize: string;
         cursorTheme: string;
+        iframeVisible: boolean;
     } | null = null;
 
     /**
@@ -34,6 +35,7 @@ class StorageService {
                 STORAGE_KEYS.IS_CURSOR_ENABLED,
                 STORAGE_KEYS.CURSOR_SIZE,
                 STORAGE_KEYS.CURSOR_THEME,
+                STORAGE_KEYS.IFRAME_VISIBLE,
             ]);
 
             this.savedSettings = {
@@ -50,6 +52,7 @@ class StorageService {
                     result[STORAGE_KEYS.CURSOR_SIZE] || DEFAULT_CURSOR_SIZE,
                 cursorTheme:
                     result[STORAGE_KEYS.CURSOR_THEME] || DEFAULT_CURSOR_THEME,
+                iframeVisible: result[STORAGE_KEYS.IFRAME_VISIBLE] ?? true,
             };
 
             return this.savedSettings;
@@ -63,6 +66,7 @@ class StorageService {
                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
                 cursorSize: DEFAULT_CURSOR_SIZE,
                 cursorTheme: DEFAULT_CURSOR_THEME,
+                iframeVisible: true,
             };
 
             return this.savedSettings;
@@ -95,6 +99,7 @@ class StorageService {
                 [STORAGE_KEYS.IS_CURSOR_ENABLED]: DEFAULT_CURSOR_ENABLED,
                 [STORAGE_KEYS.CURSOR_SIZE]: DEFAULT_CURSOR_SIZE,
                 [STORAGE_KEYS.CURSOR_THEME]: DEFAULT_CURSOR_THEME,
+                [STORAGE_KEYS.IFRAME_VISIBLE]: true,
             });
 
             this.savedSettings = {
@@ -104,6 +109,7 @@ class StorageService {
                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
                 cursorSize: DEFAULT_CURSOR_SIZE,
                 cursorTheme: DEFAULT_CURSOR_THEME,
+                iframeVisible: true,
             };
 
             logger.debug("모든 설정이 초기화되었습니다.");
@@ -127,6 +133,7 @@ class StorageService {
                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
                 cursorSize: DEFAULT_CURSOR_SIZE,
                 cursorTheme: DEFAULT_CURSOR_THEME,
+                iframeVisible: true,
             };
         }
 
@@ -165,6 +172,12 @@ class StorageService {
         if (changes[STORAGE_KEYS.CURSOR_THEME]) {
             this.savedSettings.cursorTheme =
                 changes[STORAGE_KEYS.CURSOR_THEME].newValue;
+            needsUpdate = true;
+        }
+
+        if (changes[STORAGE_KEYS.IFRAME_VISIBLE]) {
+            this.savedSettings.iframeVisible =
+                changes[STORAGE_KEYS.IFRAME_VISIBLE].newValue;
             needsUpdate = true;
         }
 

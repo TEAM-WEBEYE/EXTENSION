@@ -27,10 +27,8 @@ export function Menubar({ isOpen, onClose, children }: ModalProps) {
 
     const handleResetSettings = async () => {
         try {
-            // 먼저 로컬 상태 초기화
             resetSettings();
 
-            // 백그라운드에 설정 초기화 요청
             const response = await chrome.runtime.sendMessage({
                 type: "RESET_SETTINGS",
             });

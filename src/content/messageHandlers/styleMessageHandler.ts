@@ -7,7 +7,7 @@ import {
     saveFontSize,
     saveFontWeight,
     saveThemeMode,
-    resetAllSettings,
+    resetAllStyles,
 } from "../storage/settingsManager";
 
 export const handleStyleMessage = (
@@ -70,7 +70,7 @@ export const handleStyleMessage = (
                     restoreAllStyles();
                     sendResponse({ success: true });
                 } else if (type === "RESET_SETTINGS") {
-                    resetAllSettings();
+                    resetAllStyles();
                     sendResponse({ success: true });
                 } else {
                     sendResponse({

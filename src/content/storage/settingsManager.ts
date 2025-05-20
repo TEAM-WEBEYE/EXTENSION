@@ -18,19 +18,21 @@ let contentCursorEnabled = true;
  * 확장 프로그램의 상태를 확인하고 적절히 처리합니다.
  */
 export function checkExtensionState(): void {
-    chrome.storage.sync.get(["stylesEnabled"], (result) => {
+    chrome.storage.sync.get(["stylesEnabled", "iframeVisible"], (result) => {
         const stylesEnabled =
             result.stylesEnabled !== undefined ? result.stylesEnabled : true;
+        const iframeVisible =
+            result.iframeVisible !== undefined ? result.iframeVisible : true;
 
         if (stylesEnabled) {
             loadAndApplySettings();
-            if (!iframeVisible()) {
+            if (iframeVisible) {
                 createIframe();
             }
         } else {
             ensureStylesRemoved();
-            if (iframeVisible()) {
-                removeIframe();
+            if (iframeVisible) {
+                createIframe();
             }
         }
     });
@@ -89,58 +91,65 @@ export function removeAllStyles(): void {
             originalFontWeight = result.fontWeight || null;
             originalThemeMode = result.themeMode || null;
 
-            chrome.storage.sync.set({ stylesEnabled: false }, () => {
-                console.log("스타일 비활성화 상태 저장됨");
+            chrome.storage.sync.set(
+                { stylesEnabled: false, iframeVisible: false },
+                () => {
+                    console.log("스타일 비활성화 상태 저장됨");
 
-                // 모든 요소의 인라인 스타일 제거
-                const elements = document.querySelectorAll("*");
-                elements.forEach((el) => {
-                    const htmlEl = el as HTMLElement;
-                    if (htmlEl.style) {
-                        htmlEl.style.removeProperty("fontSize");
-                        htmlEl.style.removeProperty("fontWeight");
-                        htmlEl.style.removeProperty("filter");
-                        htmlEl.style.removeProperty("backgroundColor");
+                    // 모든 요소의 인라인 스타일 제거
+                    const elements = document.querySelectorAll("*");
+                    elements.forEach((el) => {
+                        const htmlEl = el as HTMLElement;
+                        if (htmlEl.style) {
+                            htmlEl.style.removeProperty("fontSize");
+                            htmlEl.style.removeProperty("fontWeight");
+                            htmlEl.style.removeProperty("filter");
+                            htmlEl.style.removeProperty("backgroundColor");
+                        }
+                    });
+
+                    // 모든 커스텀 스타일 제거
+                    const modeStyle =
+                        document.getElementById("webeye-mode-style");
+                    if (modeStyle) {
+                        modeStyle.remove();
                     }
-                });
 
-                // 모든 커스텀 스타일 제거
-                const modeStyle = document.getElementById("webeye-mode-style");
-                if (modeStyle) {
-                    modeStyle.remove();
-                }
+                    const globalFontStyle = document.getElementById(
+                        "webeye-global-font-style",
+                    );
+                    if (globalFontStyle) {
+                        globalFontStyle.remove();
+                    }
 
-                const globalFontStyle = document.getElementById(
-                    "webeye-global-font-style",
-                );
-                if (globalFontStyle) {
-                    globalFontStyle.remove();
-                }
+                    const cursorStyle = document.getElementById(
+                        "custom-cursor-style",
+                    );
+                    if (cursorStyle) {
+                        document.head.removeChild(cursorStyle);
+                    }
 
-                const cursorStyle = document.getElementById(
-                    "custom-cursor-style",
-                );
-                if (cursorStyle) {
-                    document.head.removeChild(cursorStyle);
-                }
+                    // 폰트 스타일 관련 추가 제거
+                    const fontStyles = document.querySelectorAll(
+                        '[style*="font-size"], [style*="font-weight"]',
+                    );
+                    fontStyles.forEach((el) => {
+                        const htmlEl = el as HTMLElement;
+                        htmlEl.style.removeProperty("font-size");
+                        htmlEl.style.removeProperty("font-weight");
+                    });
 
-                // 폰트 스타일 관련 추가 제거
-                const fontStyles = document.querySelectorAll(
-                    '[style*="font-size"], [style*="font-weight"]',
-                );
-                fontStyles.forEach((el) => {
-                    const htmlEl = el as HTMLElement;
-                    htmlEl.style.removeProperty("font-size");
-                    htmlEl.style.removeProperty("font-weight");
-                });
-
-                removeStyleFromIframes();
-                removeIframe();
-
-                console.log("모든 스타일과 iframe이 제거되었습니다.");
-            });
+                    console.log("모든 스타일과 iframe이 제거되었습니다.");
+                },
+            );
         },
     );
+    chrome.storage.sync.get(["stylesEnabled", "iframeVisible"], (result) => {
+        if (!(result.stylesEnabled && result.iframeVisible)) {
+            removeStyleFromIframes();
+            removeIframe();
+        }
+    });
 }
 
 /**
@@ -225,69 +234,63 @@ export function saveThemeMode(themeMode: ModeType): void {
 /**
  * 모든 설정을 초기화합니다.
  */
-export function resetAllSettings(): void {
-    const defaultSettings = {
-        fontSize: "SET_FONT_SIZE_M",
-        fontWeight: "SET_FONT_WEIGHT_REGULAR",
-        themeMode: "SET_MODE_LIGHT" as ModeType,
-    };
+export function resetAllStyles(): void {
+    chrome.storage.sync.get(
+        ["fontSize", "fontWeight", "themeMode"],
+        (result) => {
+            originalFontSize = result.fontSize || null;
+            originalFontWeight = result.fontWeight || null;
+            originalThemeMode = result.themeMode || null;
 
-    // 모든 스타일시트 제거
-    const styleSheets = document.querySelectorAll(
-        'style[id^="webeye-"], style[id="custom-cursor-style"]',
-    );
-    styleSheets.forEach((sheet) => sheet.remove());
+            chrome.storage.sync.set(
+                { stylesEnabled: false, iframeVisible: true },
+                () => {
+                    console.log("스타일 비활성화 상태 저장됨");
 
-    // iframe 내부의 스타일시트도 제거 (크로스 오리진 오류 처리)
-    document.querySelectorAll("iframe").forEach((iframe) => {
-        try {
-            // iframe의 origin이 현재 페이지와 같은지 확인
-            const iframeOrigin = new URL(iframe.src).origin;
-            const currentOrigin = window.location.origin;
+                    // 모든 요소의 인라인 스타일 제거
+                    const elements = document.querySelectorAll("*");
+                    elements.forEach((el) => {
+                        const htmlEl = el as HTMLElement;
+                        if (htmlEl.style) {
+                            htmlEl.style.removeProperty("fontSize");
+                            htmlEl.style.removeProperty("fontWeight");
+                            htmlEl.style.removeProperty("filter");
+                            htmlEl.style.removeProperty("backgroundColor");
+                        }
+                    });
 
-            if (iframeOrigin === currentOrigin) {
-                const iframeDoc =
-                    iframe.contentDocument || iframe.contentWindow?.document;
-                if (iframeDoc) {
-                    const iframeStyleSheets = iframeDoc.querySelectorAll(
-                        'style[id^="webeye-"], style[id="custom-cursor-style"]',
+                    // 모든 커스텀 스타일 제거
+                    const modeStyle =
+                        document.getElementById("webeye-mode-style");
+                    if (modeStyle) {
+                        modeStyle.remove();
+                    }
+
+                    const globalFontStyle = document.getElementById(
+                        "webeye-global-font-style",
                     );
-                    iframeStyleSheets.forEach((sheet) => sheet.remove());
-                }
-            }
-        } catch (e) {
-            // 크로스 오리진 오류는 무시하고 계속 진행
-            console.debug("iframe 접근 불가 (크로스 오리진):", e);
-        }
-    });
+                    if (globalFontStyle) {
+                        globalFontStyle.remove();
+                    }
 
-    // 모든 요소의 인라인 스타일 제거
-    const elements = document.querySelectorAll("*");
-    elements.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        if (htmlEl.style) {
-            htmlEl.style.removeProperty("fontSize");
-            htmlEl.style.removeProperty("fontWeight");
-            htmlEl.style.removeProperty("filter");
-            htmlEl.style.removeProperty("backgroundColor");
-        }
-    });
+                    const cursorStyle = document.getElementById(
+                        "custom-cursor-style",
+                    );
+                    if (cursorStyle) {
+                        document.head.removeChild(cursorStyle);
+                    }
 
-    // 스타일 비활성화 상태로 설정
-    chrome.storage.sync.set(
-        {
-            ...defaultSettings,
-            stylesEnabled: false,
-        },
-        () => {
-            console.log("모든 설정이 초기화되었습니다.");
-            // iframe 제거
-            const iframe = document.getElementById(
-                "floating-button-extension-iframe",
+                    // 폰트 스타일 관련 추가 제거
+                    const fontStyles = document.querySelectorAll(
+                        '[style*="font-size"], [style*="font-weight"]',
+                    );
+                    fontStyles.forEach((el) => {
+                        const htmlEl = el as HTMLElement;
+                        htmlEl.style.removeProperty("font-size");
+                        htmlEl.style.removeProperty("font-weight");
+                    });
+                },
             );
-            if (iframe) {
-                iframe.remove();
-            }
         },
     );
 }

@@ -24,10 +24,11 @@ export const ALLOWED_FONT_MESSAGES: FontMessageType[] = [
 ];
 
 export const STORAGE_KEYS = {
-    CURSOR_THEME: "cursorTheme",
-    CURSOR_SIZE: "cursorSize",
-    IS_CURSOR_ENABLED: "isCursorEnabled",
-    THEME_MODE: "themeMode",
     FONT_SIZE: "fontSize",
     FONT_WEIGHT: "fontWeight",
-};
+    THEME_MODE: "themeMode",
+    IS_CURSOR_ENABLED: "isCursorEnabled",
+    CURSOR_SIZE: "cursorSize",
+    CURSOR_THEME: "cursorTheme",
+    IFRAME_VISIBLE: "iframeVisible",
+} as const;
