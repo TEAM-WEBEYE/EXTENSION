@@ -22,6 +22,7 @@ export function initMessageListeners(): void {
         }
 
         if (message.type === "RESET_SETTINGS") {
+            console.log("설정 초기화 요청 수신");
             settingsService
                 .resetAllSettings()
                 .then(() => {

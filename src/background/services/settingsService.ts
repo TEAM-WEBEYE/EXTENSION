@@ -36,24 +36,35 @@ class SettingsService {
      */
     async resetAllSettings(): Promise<void> {
         try {
+            // 먼저 스토리지 초기화
             await storageService.resetAllSettings();
 
+            // 커서 설정 초기화
             cursorService.setCursorTheme(DEFAULT_CURSOR_THEME);
             cursorService.setCursorSize(DEFAULT_CURSOR_SIZE);
             cursorService.setCursorEnabled(DEFAULT_CURSOR_ENABLED);
 
+            // 활성 탭에 즉시 설정 적용
             const tabs = await chrome.tabs.query({ active: true });
 
             for (const tab of tabs) {
                 if (tab.id) {
                     try {
+                        // 먼저 모든 스타일 제거
+                        await chrome.tabs.sendMessage(tab.id, {
+                            type: "DISABLE_ALL_STYLES",
+                        });
+
+                        // 잠시 대기 후 새로운 설정 적용
+                        await new Promise((resolve) => setTimeout(resolve, 50));
+
+                        // 새로운 설정 적용
                         await chrome.tabs.sendMessage(tab.id, {
                             type: "APPLY_SETTINGS",
                             settings: {
                                 themeMode: DEFAULT_THEME,
                                 fontSize: DEFAULT_FONT_SIZE,
                                 fontWeight: DEFAULT_FONT_WEIGHT,
-
                                 cursorTheme: DEFAULT_CURSOR_THEME,
                                 cursorSize: DEFAULT_CURSOR_SIZE,
                                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
@@ -68,6 +79,7 @@ class SettingsService {
                 }
             }
 
+            // 다른 모든 탭에도 설정 전파
             await this.sendSettingsToAllTabs();
 
             logger.debug("모든 설정이 초기화되었습니다.");

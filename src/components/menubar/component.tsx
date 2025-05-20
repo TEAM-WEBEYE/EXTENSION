@@ -25,19 +25,27 @@ export function Menubar({ isOpen, onClose, children }: ModalProps) {
         }
     };
 
-    const handleResetSettings = () => {
-        resetSettings();
+    const handleResetSettings = async () => {
+        try {
+            // 먼저 로컬 상태 초기화
+            resetSettings();
 
-        chrome.runtime
-            .sendMessage({ type: "RESET_SETTINGS" })
-            .then((response) => {
-                if (response && response.success) {
-                    logger.debug("모든 설정이 초기화되었습니다.");
-                }
-            })
-            .catch((error) => {
-                logger.error("메시지 전송 중 오류:", error);
+            // 백그라운드에 설정 초기화 요청
+            const response = await chrome.runtime.sendMessage({
+                type: "RESET_SETTINGS",
             });
+
+            if (response && response.success) {
+                logger.debug("모든 설정이 초기화되었습니다.");
+
+                // 설정이 초기화된 후 약간의 지연을 두고 메뉴바를 닫음
+                setTimeout(() => {
+                    onClose();
+                }, 100);
+            }
+        } catch (error) {
+            logger.error("설정 초기화 중 오류:", error);
+        }
     };
 
     return (
