@@ -205,8 +205,8 @@ export function restoreAllStyles(): void {
  * 폰트 크기 설정을 저장하고 적용합니다.
  */
 export function saveFontSize(fontSize: string): void {
-    chrome.storage.sync.set({ fontSize }, () => {
-        console.log("폰트 크기 설정 저장됨:", fontSize);
+    chrome.storage.sync.set({ fontSize, stylesEnabled: true }, () => {
+        console.log("폰트 크기 설정 저장됨:", fontSize, "stylesEnabled: true");
         applyFontStyle({ fontSize });
     });
 }
@@ -215,8 +215,12 @@ export function saveFontSize(fontSize: string): void {
  * 폰트 두께 설정을 저장하고 적용합니다.
  */
 export function saveFontWeight(fontWeight: string): void {
-    chrome.storage.sync.set({ fontWeight }, () => {
-        console.log("폰트 두께 설정 저장됨:", fontWeight);
+    chrome.storage.sync.set({ fontWeight, stylesEnabled: true }, () => {
+        console.log(
+            "폰트 두께 설정 저장됨:",
+            fontWeight,
+            "stylesEnabled: true",
+        );
         applyFontStyle({ fontWeight });
     });
 }
@@ -225,8 +229,8 @@ export function saveFontWeight(fontWeight: string): void {
  * 테마 모드 설정을 저장하고 적용합니다.
  */
 export function saveThemeMode(themeMode: ModeType): void {
-    chrome.storage.sync.set({ themeMode }, () => {
-        console.log("테마 모드 설정 저장됨:", themeMode);
+    chrome.storage.sync.set({ themeMode, stylesEnabled: true }, () => {
+        console.log("테마 모드 설정 저장됨:", themeMode, "stylesEnabled: true");
         applyModeStyle(themeMode);
     });
 }
