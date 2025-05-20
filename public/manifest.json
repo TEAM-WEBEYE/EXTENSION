@@ -21,7 +21,10 @@
                 "icons/icon.png",
                 "images/cursors/*.png",
                 "iframe.html",
-                "images/search.png"
+                "images/search.png",
+                "fonts/*.woff2",
+                "fonts/*.woff",
+                "fonts/*.eot"
             ],
             "matches": ["<all_urls>"]
         }

@@ -57,6 +57,7 @@ module.exports = {
                 { from: "public/icons", to: "../icons" },
                 { from: "src/iframe/iframe.html", to: "../" },
                 { from: "public/images", to: "../images" },
+                { from: "src/assets/fonts", to: "../fonts" },
             ],
         }),
     ],
