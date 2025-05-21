@@ -3,7 +3,14 @@ import { createRoot } from "react-dom/client";
 import { ThemeContextProvider, useTheme } from "@src/contexts/ThemeContext";
 
 interface ReviewSummaryProps {
-    result: any;
+    result: {
+        data: {
+            averageRating: number;
+            keywords: string[];
+            positiveReviews: string[];
+            negativeReviews: string[];
+        };
+    };
 }
 
 const ReviewSummaryComponent = ({ result }: ReviewSummaryProps) => {
@@ -16,7 +23,6 @@ const ReviewSummaryComponent = ({ result }: ReviewSummaryProps) => {
         width: "100%",
         padding: "28px",
         backgroundColor: "#FFFFFF",
-        color: "#212121",
         marginTop: "20px",
     };
 
@@ -29,16 +35,39 @@ const ReviewSummaryComponent = ({ result }: ReviewSummaryProps) => {
 
     const titleStyle = {
         fontSize: fontClasses.fontHeading,
+    };
+
+    const subTitleStyle = {
+        fontSize: fontClasses.fontCommon,
         color: "#8914FF",
     };
 
     const contentStyle = {
-        fontSize: fontClasses.fontCommon,
+        fontSize: fontClasses.fontCaption,
         whiteSpace: "pre-wrap" as const,
         marginTop: "16px",
     };
 
-    const reviewMap = new Map([
+    const valueStyle = {
+        backgroundColor: "#F5F5F5",
+        padding: "24px 18px",
+        borderRadius: "14px",
+    };
+
+    const itemStyle = {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+    };
+
+    const dividerStyle = {
+        height: "2px",
+        width: "100%",
+        backgroundColor: "#E0E0E0",
+        margin: "15px 0",
+    };
+
+    const reviewMap = new Map<string, string[]>([
         ["주요 리뷰 키워드", result.data.keywords],
         ["긍정적 리뷰", result.data.positiveReviews],
         ["부정적 리뷰", result.data.negativeReviews],
@@ -49,15 +78,27 @@ const ReviewSummaryComponent = ({ result }: ReviewSummaryProps) => {
             <div style={headerStyle}>
                 <div style={titleStyle}>리뷰 요약</div>
             </div>
-            <div>
-                전체 리뷰는 개이며, 전체 평점은 {result.data.averageRating}
-                입니다.
+            <div style={subTitleStyle}>
+                전체 리뷰는{" "}
+                {result.data.keywords.length +
+                    result.data.positiveReviews.length +
+                    result.data.negativeReviews.length}
+                개이며, 전체 평점은 {result.data.averageRating}입니다.
             </div>
             <div style={contentStyle}>
                 {Array.from(reviewMap).map(([key, value]) => (
                     <div key={key} style={{ marginBottom: "12px" }}>
-                        <strong style={{ color: "#8914FF" }}>{key}:</strong>{" "}
-                        {value}
+                        <strong>{key}:</strong>
+                        <div style={valueStyle}>
+                            {value.map((item: string, idx: number) => (
+                                <div key={idx}>
+                                    <div style={itemStyle}>{item}</div>
+                                    {idx !== value.length - 1 && (
+                                        <div style={dividerStyle} />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 ))}
             </div>

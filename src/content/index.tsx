@@ -59,7 +59,6 @@ function runContentScript() {
     }
 }
 
-// SPA 대응 URL 감지
 let lastUrl = location.href;
 setInterval(() => {
     if (location.href !== lastUrl) {
@@ -68,7 +67,6 @@ setInterval(() => {
     }
 }, 1000);
 
-// 최초 실행
 runContentScript();
 
 document.addEventListener("visibilitychange", () => {
@@ -159,8 +157,8 @@ async function waitForRatingItems(timeout = 5000) {
 
 async function processReviewData() {
     try {
-        await waitForRatingItems(); // 별점 DOM 준비될 때까지 기다리기
-        const ratingData = parseReviewRating(); // 이제 제대로 읽힘
+        await waitForRatingItems();
+        const ratingData = parseReviewRating();
         console.log("⭐️ 별점 데이터:", ratingData);
 
         const productId = extractProductId(location.href);

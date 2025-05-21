@@ -79,7 +79,6 @@ const CartSummary = () => {
         width: "563px",
         padding: "28px",
         backgroundColor: "#FFFFFF",
-        color: "#212121",
     };
 
     const headerStyle = {
