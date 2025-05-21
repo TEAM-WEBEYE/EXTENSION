@@ -2,16 +2,17 @@ import { logger } from "@src/utils/logger";
 import { ALLOWED_FONT_MESSAGES } from "../constants";
 import { cursorService } from "../services/cursorService";
 import { settingsService } from "../services/settingsService";
+import { handleReviewAnalysisMessage } from "./reviewAnalysisListener";
 
 /**
  * 메시지 리스너 초기화
  */
 export function initMessageListeners(): void {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (ALLOWED_FONT_MESSAGES.includes(message.type)) {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (ALLOWED_FONT_MESSAGES.includes(request.type)) {
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 if (tabs[0]?.id) {
-                    chrome.tabs.sendMessage(tabs[0].id, message, (res) => {
+                    chrome.tabs.sendMessage(tabs[0].id, request, (res) => {
                         sendResponse(res);
                     });
                 } else {
@@ -21,7 +22,7 @@ export function initMessageListeners(): void {
             return true;
         }
 
-        if (message.type === "RESET_SETTINGS") {
+        if (request.type === "RESET_SETTINGS") {
             settingsService
                 .resetAllSettings()
                 .then(() => {
@@ -31,11 +32,10 @@ export function initMessageListeners(): void {
                     logger.error("설정 초기화 중 오류:", error);
                     sendResponse({ success: false, error: error.message });
                 });
-
             return true;
         }
 
-        if (message.type === "GET_CURSOR_SETTINGS") {
+        if (request.type === "GET_CURSOR_SETTINGS") {
             const cursorUrl = cursorService.isCursorActive()
                 ? cursorService.getCurrentCursorUrl()
                 : null;
@@ -46,7 +46,10 @@ export function initMessageListeners(): void {
             });
             return true;
         }
-
+        if (request.type === "ANALYZE_COUPANG_REVIEWS") {
+            handleReviewAnalysisMessage(request.payload, sendResponse);
+            return true;
+        }
         return false;
     });
 }
