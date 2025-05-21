@@ -1,4 +1,3 @@
-import React from "react";
 import {
     checkExtensionState,
     initCursorSettings,
@@ -6,7 +5,7 @@ import {
 import { handleStyleMessage } from "./messageHandlers/styleMessageHandler";
 import { handleCursorMessage } from "./messageHandlers/cursorMessageHandler";
 import { handleModalMessage } from "./messageHandlers/modalMessageHandler";
-import { initDomObserver } from "./observers/domObserver";
+import { createStyleObserver } from "./observers/styleObserver";
 import { processImages } from "./imageHandlers/imageProcessor";
 import { MountCartSummaryApp } from "./coupang/cartSummary";
 import { checkCategoryAndRender } from "./coupang/categoryHandler";
@@ -38,26 +37,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return handleModalMessage(message, sendResponse);
 });
 
-// 스타일 활성화 상태를 확인하는 콜백 함수
-const checkStylesEnabled = () => {
-    return new Promise<boolean>((resolve) => {
-        chrome.storage.sync.get(["stylesEnabled"], (result) => {
-            resolve(
-                result.stylesEnabled !== undefined
-                    ? result.stylesEnabled
-                    : true,
-            );
-        });
-    });
-};
-
-// DOM Observer 초기화
-const observer = initDomObserver(() => {
-    let enabled = true;
-    checkStylesEnabled().then((result) => {
-        enabled = result;
-    });
-    return enabled;
+const observer = createStyleObserver();
+observer.observe(document.body, {
+    childList: true,
+    subtree: true,
 });
 
 processImages();

@@ -3,9 +3,9 @@ import { createRoot } from "react-dom/client";
 import { ControlImage } from "../../components/imageCheck/controlImage";
 
 export const isIgnorableImage = (img: HTMLImageElement): boolean => {
-    const alt = img.alt?.toLowerCase();
-    const className = img.className?.toLowerCase();
-    const src = img.src?.toLowerCase();
+    const alt = img.alt?.toLowerCase() ?? "";
+    const className = img.className?.toLowerCase() ?? "";
+    const src = img.src?.toLowerCase() ?? "";
     const anchor = img.closest("a");
     const isLinked = !!(anchor && anchor.href && anchor.href !== "#");
 
@@ -23,16 +23,20 @@ export const isIgnorableImage = (img: HTMLImageElement): boolean => {
 };
 
 export const processImages = () => {
-    document.querySelectorAll("img").forEach((img) => {
+    console.log("[processImages] 실행됨 ");
+    const images = document.querySelectorAll("img");
+
+    images.forEach((img) => {
+        if (!(img instanceof HTMLImageElement)) return;
         if (img.getAttribute("data-webeye-injected") === "true") return;
         if (isIgnorableImage(img)) return;
 
         img.setAttribute("data-webeye-injected", "true");
 
-        const container = document.createElement("div");
-        document.body.appendChild(container);
+        const reactContainer = document.createElement("div");
+        document.body.appendChild(reactContainer);
 
-        const root = createRoot(container);
+        const root = createRoot(reactContainer);
         root.render(<ControlImage targetImg={img} />);
     });
 };
