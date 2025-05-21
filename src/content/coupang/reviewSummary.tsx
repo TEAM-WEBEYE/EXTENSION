@@ -50,7 +50,7 @@ const ReviewSummaryComponent = ({ result }: ReviewSummaryProps) => {
 
     const valueStyle = {
         backgroundColor: "#F5F5F5",
-        padding: "24px 18px",
+        padding: "18px 24px",
         borderRadius: "14px",
     };
 
