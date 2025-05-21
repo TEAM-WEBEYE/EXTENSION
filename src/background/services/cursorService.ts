@@ -17,22 +17,34 @@ class CursorService {
     /**
      * 현재 커서 테마를 설정합니다.
      */
-    setCursorTheme(theme: CursorTheme): void {
+    async setCursorTheme(theme: CursorTheme): Promise<void> {
         this.cursorTheme = theme;
+        await chrome.storage.sync.set({
+            cursorTheme: theme,
+            stylesEnabled: true,
+        });
     }
 
     /**
      * 현재 커서 크기를 설정합니다.
      */
-    setCursorSize(size: CursorSize): void {
+    async setCursorSize(size: CursorSize): Promise<void> {
         this.cursorSize = size;
+        await chrome.storage.sync.set({
+            cursorSize: size,
+            stylesEnabled: true,
+        });
     }
 
     /**
      * 커서 활성화 상태를 설정합니다.
      */
-    setCursorEnabled(enabled: boolean): void {
+    async setCursorEnabled(enabled: boolean): Promise<void> {
         this.isCursorEnabled = enabled;
+        await chrome.storage.sync.set({
+            isCursorEnabled: enabled,
+            stylesEnabled: true,
+        });
     }
 
     /**
@@ -111,6 +123,7 @@ class CursorService {
         try {
             await chrome.storage.sync.set({
                 isCursorEnabled: this.isCursorEnabled,
+                stylesEnabled: true,
             });
 
             await this.updateAllTabs();

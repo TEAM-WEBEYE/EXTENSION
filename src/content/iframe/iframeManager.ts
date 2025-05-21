@@ -1,6 +1,6 @@
 import { EXTENSION_IFRAME_ID } from "../constants";
+import { STORAGE_KEYS } from "../../background/constants";
 
-let iframeVisible = false;
 let savedIframeElement: HTMLIFrameElement | null = null;
 let currentListener: ((event: MessageEvent) => void) | null = null;
 
@@ -42,9 +42,24 @@ function resetIframeState(iframe: HTMLIFrameElement): void {
 }
 
 /**
+ * iframe의 가시성 상태를 가져옵니다.
+ */
+async function getIframeVisibility(): Promise<boolean> {
+    const result = await chrome.storage.sync.get([STORAGE_KEYS.IFRAME_VISIBLE]);
+    return result[STORAGE_KEYS.IFRAME_VISIBLE] ?? true;
+}
+
+/**
+ * iframe의 가시성 상태를 설정합니다.
+ */
+async function setIframeVisibility(visible: boolean): Promise<void> {
+    await chrome.storage.sync.set({ [STORAGE_KEYS.IFRAME_VISIBLE]: visible });
+}
+
+/**
  * 플로팅 버튼 iframe을 생성합니다.
  */
-export function createIframe(): void {
+export async function createIframe(): Promise<void> {
     if (!document.getElementById(EXTENSION_IFRAME_ID)) {
         const iframe = document.createElement("iframe");
         iframe.id = EXTENSION_IFRAME_ID;
@@ -75,7 +90,7 @@ export function createIframe(): void {
         window.addEventListener("message", currentListener);
 
         document.body.appendChild(iframe);
-        iframeVisible = true;
+        await setIframeVisibility(true);
         savedIframeElement = iframe;
     }
 }
@@ -83,7 +98,7 @@ export function createIframe(): void {
 /**
  * iframe을 제거합니다.
  */
-export function removeIframe(): void {
+export async function removeIframe(): Promise<void> {
     const iframe = document.getElementById(
         EXTENSION_IFRAME_ID,
     ) as HTMLIFrameElement;
@@ -96,15 +111,16 @@ export function removeIframe(): void {
 
         savedIframeElement = iframe;
         iframe.remove();
-        iframeVisible = false;
+        await setIframeVisibility(false);
     }
 }
 
 /**
  * iframe을 복원합니다.
  */
-export function restoreIframe(): void {
-    if (!iframeVisible && savedIframeElement) {
+export async function restoreIframe(): Promise<void> {
+    const isVisible = await getIframeVisibility();
+    if (!isVisible && savedIframeElement) {
         // iframe을 완전히 초기 상태로 리셋
         resetIframeState(savedIframeElement);
 
@@ -118,22 +134,27 @@ export function restoreIframe(): void {
         window.addEventListener("message", currentListener);
 
         document.body.appendChild(savedIframeElement);
-        iframeVisible = true;
-    } else if (!iframeVisible) {
-        createIframe();
+        await setIframeVisibility(true);
+    } else if (!isVisible) {
+        await createIframe();
     }
 }
 
 /**
  * iframe의 가시성 상태를 반환합니다.
  */
-export function isIframeVisible(): boolean {
-    return iframeVisible;
+export async function isIframeVisible(): Promise<boolean> {
+    return await getIframeVisibility();
 }
 
 /**
  * iframe을 가시적인 상태로 설정합니다.
  */
-export function setIframeVisible(visible: boolean): void {
-    iframeVisible = visible;
+export async function setIframeVisible(visible: boolean): Promise<void> {
+    await setIframeVisibility(visible);
+    if (visible) {
+        await restoreIframe();
+    } else {
+        await removeIframe();
+    }
 }

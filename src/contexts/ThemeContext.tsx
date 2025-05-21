@@ -4,8 +4,8 @@ import { getFontClasses } from "@src/utils/fontUtils";
 import { applyCursorStyle } from "@src/utils/cursorUtils";
 
 export type Theme = "light" | "dark";
-export type FontSize = "xs" | "s" | "m" | "l" | "xl";
-export type FontWeight = "regular" | "bold" | "xbold";
+export type FontSize = "xl" | "l" | "m" | "s" | "xs";
+export type FontWeight = "xbold" | "bold" | "regular";
 export type CursorTheme =
     | "white"
     | "purple"
@@ -53,7 +53,7 @@ export function ThemeContextProvider({
     children: React.ReactNode;
 }) {
     const [theme, setTheme] = useSyncedState<Theme>(
-        "theme",
+        "themeMode",
         DEFAULT_SETTINGS.theme,
     );
     const [fontSize, setFontSize] = useSyncedState<FontSize>(
@@ -92,14 +92,17 @@ export function ThemeContextProvider({
         setIsCursorEnabled(DEFAULT_SETTINGS.isCursorEnabled);
     };
 
-    const fontClasses = getFontClasses(fontSize, fontWeight);
+    const fontClasses = getFontClasses(
+        fontSize || DEFAULT_SETTINGS.fontSize,
+        fontWeight || DEFAULT_SETTINGS.fontWeight,
+    );
 
     return (
         <ThemeContext.Provider
             value={{
                 theme,
-                fontSize,
-                fontWeight,
+                fontSize: fontSize || DEFAULT_SETTINGS.fontSize,
+                fontWeight: fontWeight || DEFAULT_SETTINGS.fontWeight,
                 cursorTheme,
                 cursorSize,
                 isCursorEnabled,

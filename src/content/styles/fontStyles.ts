@@ -11,6 +11,7 @@ export function applyFontStyle(style: FontStyle): void {
         const htmlEl = el as HTMLElement;
         if (style.fontSize) htmlEl.style.fontSize = style.fontSize;
         if (style.fontWeight) htmlEl.style.fontWeight = style.fontWeight;
+        htmlEl.style.fontFamily = "KoddiUDOnGothic, sans-serif";
     });
 
     const existingGlobalStyle = document.getElementById(
@@ -24,7 +25,11 @@ export function applyFontStyle(style: FontStyle): void {
         const globalStyle = document.createElement("style");
         globalStyle.id = "webeye-global-font-style";
 
-        let cssText = "";
+        let cssText = `
+            ${targetSelectors.join(", ")} {
+                font-family: KoddiUDOnGothic, sans-serif !important;
+            }
+        `;
 
         if (style.fontSize) {
             cssText += `
@@ -58,6 +63,7 @@ export function applyFontStyleToNode(node: Node, style: FontStyle): void {
         const element = node as HTMLElement;
         if (style.fontSize) element.style.fontSize = style.fontSize;
         if (style.fontWeight) element.style.fontWeight = style.fontWeight;
+        element.style.fontFamily = "KoddiUDOnGothic, sans-serif";
 
         const childElements = element.querySelectorAll(
             targetSelectors.join(","),
@@ -67,6 +73,7 @@ export function applyFontStyleToNode(node: Node, style: FontStyle): void {
             if (style.fontSize) htmlChildEl.style.fontSize = style.fontSize;
             if (style.fontWeight)
                 htmlChildEl.style.fontWeight = style.fontWeight;
+            htmlChildEl.style.fontFamily = "KoddiUDOnGothic, sans-serif";
         });
     }
 }
