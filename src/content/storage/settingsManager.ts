@@ -1,4 +1,4 @@
-import { FontStyle, UserSettings } from "../types";
+import { FontStyle } from "../types";
 import { applyFontStyle } from "../styles/fontStyles";
 import { applyModeStyle } from "../styles/modeStyles";
 import { applyCursorStyle, removeCursorStyle } from "../styles/cursorStyles";
@@ -9,7 +9,11 @@ import {
 } from "../iframe/iframeManager";
 import { removeStyleFromIframes } from "../styles/cursorStyles";
 
-let originalSettings: UserSettings | null = null;
+let originalSettings: {
+    fontSize?: string;
+    fontWeight?: string;
+    themeMode?: string;
+} | null = null;
 let contentCursorEnabled = true;
 
 /**
@@ -80,58 +84,67 @@ function ensureStylesRemoved(): void {
  * 모든 스타일을 제거합니다.
  */
 export function removeAllStyles(): void {
-    chrome.storage.sync.get(["userSettings"], (result) => {
-        originalSettings = result.userSettings || {};
+    chrome.storage.sync.get(
+        ["fontSize", "fontWeight", "themeMode"],
+        (result) => {
+            originalSettings = {
+                fontSize: result.fontSize,
+                fontWeight: result.fontWeight,
+                themeMode: result.themeMode,
+            };
 
-        chrome.storage.sync.set({ stylesEnabled: false }, () => {
-            console.log("스타일 비활성화 상태 저장됨");
+            chrome.storage.sync.set({ stylesEnabled: false }, () => {
+                console.log("스타일 비활성화 상태 저장됨");
 
-            // 모든 요소의 인라인 스타일 제거
-            const elements = document.querySelectorAll("*");
-            elements.forEach((el) => {
-                const htmlEl = el as HTMLElement;
-                if (htmlEl.style) {
-                    htmlEl.style.removeProperty("fontSize");
-                    htmlEl.style.removeProperty("fontWeight");
-                    htmlEl.style.removeProperty("filter");
-                    htmlEl.style.removeProperty("backgroundColor");
+                // 모든 요소의 인라인 스타일 제거
+                const elements = document.querySelectorAll("*");
+                elements.forEach((el) => {
+                    const htmlEl = el as HTMLElement;
+                    if (htmlEl.style) {
+                        htmlEl.style.removeProperty("fontSize");
+                        htmlEl.style.removeProperty("fontWeight");
+                        htmlEl.style.removeProperty("filter");
+                        htmlEl.style.removeProperty("backgroundColor");
+                    }
+                });
+
+                // 모든 커스텀 스타일 제거
+                const modeStyle = document.getElementById("webeye-mode-style");
+                if (modeStyle) {
+                    modeStyle.remove();
                 }
+
+                const globalFontStyle = document.getElementById(
+                    "webeye-global-font-style",
+                );
+                if (globalFontStyle) {
+                    globalFontStyle.remove();
+                }
+
+                const cursorStyle = document.getElementById(
+                    "custom-cursor-style",
+                );
+                if (cursorStyle) {
+                    document.head.removeChild(cursorStyle);
+                }
+
+                // 폰트 스타일 관련 추가 제거
+                const fontStyles = document.querySelectorAll(
+                    '[style*="font-size"], [style*="font-weight"]',
+                );
+                fontStyles.forEach((el) => {
+                    const htmlEl = el as HTMLElement;
+                    htmlEl.style.removeProperty("font-size");
+                    htmlEl.style.removeProperty("font-weight");
+                });
+
+                removeStyleFromIframes();
+                removeIframe();
+
+                console.log("모든 스타일과 iframe이 제거되었습니다.");
             });
-
-            // 모든 커스텀 스타일 제거
-            const modeStyle = document.getElementById("webeye-mode-style");
-            if (modeStyle) {
-                modeStyle.remove();
-            }
-
-            const globalFontStyle = document.getElementById(
-                "webeye-global-font-style",
-            );
-            if (globalFontStyle) {
-                globalFontStyle.remove();
-            }
-
-            const cursorStyle = document.getElementById("custom-cursor-style");
-            if (cursorStyle) {
-                document.head.removeChild(cursorStyle);
-            }
-
-            // 폰트 스타일 관련 추가 제거
-            const fontStyles = document.querySelectorAll(
-                '[style*="font-size"], [style*="font-weight"]',
-            );
-            fontStyles.forEach((el) => {
-                const htmlEl = el as HTMLElement;
-                htmlEl.style.removeProperty("font-size");
-                htmlEl.style.removeProperty("font-weight");
-            });
-
-            removeStyleFromIframes();
-            removeIframe();
-
-            console.log("모든 스타일과 iframe이 제거되었습니다.");
-        });
-    });
+        },
+    );
 }
 
 /**
@@ -141,27 +154,36 @@ export function restoreAllStyles(): void {
     chrome.storage.sync.set({ stylesEnabled: true }, () => {
         console.log("스타일 활성화 상태 저장됨");
 
-        chrome.storage.sync.get(["userSettings"], (result) => {
-            const settings = result.userSettings || originalSettings || {};
+        chrome.storage.sync.get(
+            ["fontSize", "fontWeight", "themeMode"],
+            (result) => {
+                const settings = {
+                    fontSize: result.fontSize || originalSettings?.fontSize,
+                    fontWeight:
+                        result.fontWeight || originalSettings?.fontWeight,
+                    themeMode: result.themeMode || originalSettings?.themeMode,
+                };
 
-            setTimeout(() => {
-                if (settings.mode) {
-                    applyModeStyle(settings.mode);
-                }
+                setTimeout(() => {
+                    if (settings.themeMode) {
+                        applyModeStyle(settings.themeMode);
+                    }
 
-                const fontStyle: Partial<FontStyle> = {};
-                if (settings.fontSize) fontStyle.fontSize = settings.fontSize;
-                if (settings.fontWeight)
-                    fontStyle.fontWeight = settings.fontWeight;
-                if (Object.keys(fontStyle).length) {
-                    applyFontStyle(fontStyle);
-                }
+                    const fontStyle: Partial<FontStyle> = {};
+                    if (settings.fontSize)
+                        fontStyle.fontSize = settings.fontSize;
+                    if (settings.fontWeight)
+                        fontStyle.fontWeight = settings.fontWeight;
+                    if (Object.keys(fontStyle).length) {
+                        applyFontStyle(fontStyle);
+                    }
 
-                restoreIframe();
+                    restoreIframe();
 
-                console.log("모든 스타일과 iframe이 복원되었습니다.");
-            }, 100);
-        });
+                    console.log("모든 스타일과 iframe이 복원되었습니다.");
+                }, 100);
+            },
+        );
 
         chrome.runtime.sendMessage(
             { type: "GET_CURSOR_SETTINGS" },
@@ -183,14 +205,13 @@ export function restoreAllStyles(): void {
  * 사용자 설정을 저장합니다.
  * @param settings 저장할 설정 객체
  */
-export function saveSettings(settings: Partial<UserSettings>): void {
-    chrome.storage.sync.get(["userSettings"], (result) => {
-        const currentSettings: UserSettings = result.userSettings || {};
-        const updatedSettings = { ...currentSettings, ...settings };
-
-        chrome.storage.sync.set({ userSettings: updatedSettings }, () => {
-            console.log("Settings saved:", updatedSettings);
-        });
+export function saveSettings(settings: {
+    fontSize?: string;
+    fontWeight?: string;
+    themeMode?: string;
+}): void {
+    chrome.storage.sync.set(settings, () => {
+        console.log("Settings saved:", settings);
     });
 }
 
@@ -198,39 +219,48 @@ export function saveSettings(settings: Partial<UserSettings>): void {
  * 설정을 로드하고 페이지에 적용합니다.
  */
 export function loadAndApplySettings(): void {
-    chrome.storage.sync.get(["userSettings", "stylesEnabled"], (result) => {
-        const settings: UserSettings = result.userSettings || {};
-        const stylesEnabled =
-            result.stylesEnabled !== undefined ? result.stylesEnabled : true;
+    chrome.storage.sync.get(
+        ["fontSize", "fontWeight", "themeMode", "stylesEnabled"],
+        (result) => {
+            const settings = {
+                fontSize: result.fontSize,
+                fontWeight: result.fontWeight,
+                themeMode: result.themeMode,
+            };
+            const stylesEnabled =
+                result.stylesEnabled !== undefined
+                    ? result.stylesEnabled
+                    : true;
 
-        console.log(
-            "Loaded settings:",
-            settings,
-            "Styles enabled:",
-            stylesEnabled,
-        );
-
-        if (!stylesEnabled) {
             console.log(
-                "스타일이 비활성화 상태입니다. 설정을 적용하지 않습니다.",
+                "Loaded settings:",
+                settings,
+                "Styles enabled:",
+                stylesEnabled,
             );
-            return;
-        }
 
-        // 테마 모드 적용
-        if (settings.mode) {
-            applyModeStyle(settings.mode);
-        }
+            if (!stylesEnabled) {
+                console.log(
+                    "스타일이 비활성화 상태입니다. 설정을 적용하지 않습니다.",
+                );
+                return;
+            }
 
-        const fontStyle: FontStyle = {
-            fontSize: settings.fontSize,
-            fontWeight: settings.fontWeight,
-        };
+            // 테마 모드 적용
+            if (settings.themeMode) {
+                applyModeStyle(settings.themeMode);
+            }
 
-        if (fontStyle.fontSize || fontStyle.fontWeight) {
-            applyFontStyle(fontStyle);
-        }
-    });
+            const fontStyle: FontStyle = {
+                fontSize: settings.fontSize,
+                fontWeight: settings.fontWeight,
+            };
+
+            if (fontStyle.fontSize || fontStyle.fontWeight) {
+                applyFontStyle(fontStyle);
+            }
+        },
+    );
 }
 
 /**

@@ -4,7 +4,7 @@
     "description": "시각 정보 해독이 어려운 사용자를 위한 크롬 확장 프로그램",
     "main": "index.js",
     "scripts": {
-        "build": "webpack --config webpack.prod.js",
+        "build": "rm -rf dist && webpack --config webpack.prod.js",
         "dev": "webpack -w --config webpack.dev.js",
         "test": "jest --config=jest.config.js --coverage",
         "lint": "eslint --fix \"src/**/*.{ts,tsx}\" --no-ignore",

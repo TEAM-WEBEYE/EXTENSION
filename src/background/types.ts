@@ -5,7 +5,9 @@ export interface UserSettings {
 }
 
 export interface SavedSettings {
-    userSettings?: UserSettings;
+    fontSize?: string;
+    fontWeight?: string;
+    themeMode?: string;
     isCursorEnabled?: boolean;
 }
 

@@ -25,13 +25,15 @@ class StorageService {
                 STORAGE_KEYS.CURSOR_THEME,
                 STORAGE_KEYS.CURSOR_SIZE,
                 STORAGE_KEYS.IS_CURSOR_ENABLED,
-                STORAGE_KEYS.USER_SETTINGS,
+                STORAGE_KEYS.FONT_SIZE,
+                STORAGE_KEYS.FONT_WEIGHT,
+                STORAGE_KEYS.THEME_MODE,
             ]);
 
             this.savedSettings = {
-                userSettings: result[
-                    STORAGE_KEYS.USER_SETTINGS
-                ] as UserSettings,
+                fontSize: result[STORAGE_KEYS.FONT_SIZE] as string,
+                fontWeight: result[STORAGE_KEYS.FONT_WEIGHT] as string,
+                themeMode: result[STORAGE_KEYS.THEME_MODE] as string,
                 isCursorEnabled: result[
                     STORAGE_KEYS.IS_CURSOR_ENABLED
                 ] as boolean,
@@ -42,11 +44,9 @@ class StorageService {
             logger.error("초기 설정 로드 중 오류:", error);
 
             return {
-                userSettings: {
-                    fontSize: DEFAULT_FONT_SIZE,
-                    fontWeight: DEFAULT_FONT_WEIGHT,
-                    mode: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
-                },
+                fontSize: DEFAULT_FONT_SIZE,
+                fontWeight: DEFAULT_FONT_WEIGHT,
+                themeMode: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
             };
         }
@@ -72,21 +72,18 @@ class StorageService {
     async resetAllSettings(): Promise<void> {
         try {
             await chrome.storage.sync.set({
-                [STORAGE_KEYS.THEME_MODE]: DEFAULT_THEME,
+                [STORAGE_KEYS.THEME_MODE]: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
                 [STORAGE_KEYS.FONT_SIZE]: DEFAULT_FONT_SIZE,
                 [STORAGE_KEYS.FONT_WEIGHT]: DEFAULT_FONT_WEIGHT,
-
                 [STORAGE_KEYS.CURSOR_THEME]: DEFAULT_CURSOR_THEME,
                 [STORAGE_KEYS.CURSOR_SIZE]: DEFAULT_CURSOR_SIZE,
                 [STORAGE_KEYS.IS_CURSOR_ENABLED]: DEFAULT_CURSOR_ENABLED,
             });
 
             this.savedSettings = {
-                userSettings: {
-                    fontSize: DEFAULT_FONT_SIZE,
-                    fontWeight: DEFAULT_FONT_WEIGHT,
-                    mode: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
-                },
+                fontSize: DEFAULT_FONT_SIZE,
+                fontWeight: DEFAULT_FONT_WEIGHT,
+                themeMode: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
             };
 
@@ -107,14 +104,28 @@ class StorageService {
 
         if (this.savedSettings === null) {
             this.savedSettings = {
-                userSettings: {},
+                fontSize: DEFAULT_FONT_SIZE,
+                fontWeight: DEFAULT_FONT_WEIGHT,
+                themeMode: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
                 isCursorEnabled: DEFAULT_CURSOR_ENABLED,
             };
         }
 
-        if (changes[STORAGE_KEYS.USER_SETTINGS]) {
-            this.savedSettings.userSettings =
-                changes[STORAGE_KEYS.USER_SETTINGS].newValue;
+        if (changes[STORAGE_KEYS.FONT_SIZE]) {
+            this.savedSettings.fontSize =
+                changes[STORAGE_KEYS.FONT_SIZE].newValue;
+            needsUpdate = true;
+        }
+
+        if (changes[STORAGE_KEYS.FONT_WEIGHT]) {
+            this.savedSettings.fontWeight =
+                changes[STORAGE_KEYS.FONT_WEIGHT].newValue;
+            needsUpdate = true;
+        }
+
+        if (changes[STORAGE_KEYS.THEME_MODE]) {
+            this.savedSettings.themeMode =
+                changes[STORAGE_KEYS.THEME_MODE].newValue;
             needsUpdate = true;
         }
 

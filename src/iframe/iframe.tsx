@@ -83,7 +83,7 @@ const App = () => {
     const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
     const [isOnboarding, setIsOnboarding] = useState(false);
     const { toggleCursor } = useTheme();
-    const { birthYear, gender, loading } = useUserInfo();
+    const { birthYear, gender } = useUserInfo();
 
     const openModal = () => {
         setIsModalOpen(true);

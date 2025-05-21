@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
+import { useSyncedState } from "./useSyncedState";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_YEAR = 1900;
 
 export function useUserInfo() {
-    const [birthYear, setBirthYear] = useState<string>("");
-    const [gender, setGender] = useState<"male" | "female" | "">("");
+    const [birthYear, setBirthYear] = useSyncedState<string>("birthYear", "");
+    const [gender, setGender] = useSyncedState<"male" | "female" | "">(
+        "gender",
+        "",
+    );
     const [error, setError] = useState<string>("");
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        chrome.storage.local.get(["birthYear", "gender"], (result) => {
-            setBirthYear(result.birthYear ?? "");
-            setGender(result.gender ?? "");
-            setLoading(false);
-        });
+        setLoading(false);
     }, []);
 
     useEffect(() => {
@@ -36,10 +36,10 @@ export function useUserInfo() {
     }, [birthYear]);
 
     const handleSave = () => {
-        chrome.storage.local.set({ birthYear, gender }, () => {
+        if (!error) {
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
-        });
+        }
     };
 
     return {

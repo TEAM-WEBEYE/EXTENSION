@@ -48,7 +48,7 @@ export const handleStyleMessage = (
         } else if (type === "SET_MODE_LIGHT" || type === "SET_MODE_DARK") {
             const modeType = type as ModeType;
             applyModeStyle(modeType);
-            saveSettings({ mode: modeType });
+            saveSettings({ themeMode: modeType });
             sendResponse({ success: true });
         } else if (type === "DISABLE_ALL_STYLES") {
             removeAllStyles();

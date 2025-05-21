@@ -1,6 +1,7 @@
 "../utils/logger";
 import { storageService } from "./storageService";
 import { cursorService } from "./cursorService";
+import { iframeService } from "./iframeService";
 import {
     DEFAULT_CURSOR_ENABLED,
     DEFAULT_CURSOR_SIZE,
@@ -91,30 +92,36 @@ class SettingsService {
 
                 logger.debug("모든 스타일이 비활성화되었습니다.");
             } else {
-                const savedSettings = storageService.getSavedSettings();
+                const savedSettings = storageService.getSavedSettings() || {
+                    fontSize: DEFAULT_FONT_SIZE,
+                    fontWeight: DEFAULT_FONT_WEIGHT,
+                    themeMode: `SET_MODE_${DEFAULT_THEME.toUpperCase()}`,
+                    isCursorEnabled: DEFAULT_CURSOR_ENABLED,
+                };
 
-                if (savedSettings) {
-                    if (savedSettings.userSettings?.mode) {
-                        await chrome.tabs.sendMessage(tabId, {
-                            type: savedSettings.userSettings.mode,
-                        });
-                    }
-
+                if (savedSettings.themeMode) {
                     await chrome.tabs.sendMessage(tabId, {
-                        type: "UPDATE_CURSOR",
-                        isCursorEnabled: savedSettings.isCursorEnabled ?? false,
-                        cursorUrl: savedSettings.isCursorEnabled
-                            ? cursorService.getCurrentCursorUrl()
-                            : null,
+                        type: savedSettings.themeMode,
                     });
-
-                    await chrome.tabs.sendMessage(tabId, {
-                        type: "RESTORE_ALL_STYLES",
-                        settings: savedSettings,
-                    });
-
-                    logger.debug("모든 스타일이 복원되었습니다.");
                 }
+
+                await chrome.tabs.sendMessage(tabId, {
+                    type: "UPDATE_CURSOR",
+                    isCursorEnabled: savedSettings.isCursorEnabled ?? false,
+                    cursorUrl: savedSettings.isCursorEnabled
+                        ? cursorService.getCurrentCursorUrl()
+                        : null,
+                });
+
+                await chrome.tabs.sendMessage(tabId, {
+                    type: "RESTORE_ALL_STYLES",
+                    settings: savedSettings,
+                });
+
+                // iframe 다시 생성
+                await iframeService.toggleIframeInActiveTab();
+
+                logger.debug("모든 스타일이 복원되었습니다.");
 
                 this.areStylesEnabled = true;
             }
