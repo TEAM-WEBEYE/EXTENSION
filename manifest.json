@@ -12,6 +12,11 @@
             "js": ["js/content.js"],
             "run_at": "document_end",
             "all_frames": true
+        },
+        {
+            "matches": ["*://*.coupang.com/vp/*"],
+            "js": ["js/autoCollectReview.js"],
+            "run_at": "document_end"
         }
     ],
     "web_accessible_resources": [
@@ -42,19 +47,19 @@
             },
             "description": "Toggle floating iframe"
         },
-        "toggle-modal": {
+        "toggle_modal": {
             "suggested_key": {
                 "default": "Alt+O",
                 "mac": "Alt+O"
             },
             "description": "모달 열기/닫기"
         },
-        "toggle-all-features": {
+        "toggle_all_features": {
             "suggested_key": {
                 "default": "Alt+A",
                 "mac": "Alt+A"
             },
-            "description": "테마와 커서 동시 토글"
+            "description": "모든 기능 토글"
         }
     }
 }
