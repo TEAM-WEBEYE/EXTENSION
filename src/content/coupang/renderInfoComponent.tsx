@@ -39,7 +39,7 @@ export const renderInfoComponent = () => {
     };
 
     const observer = new MutationObserver((mutations, obs) => {
-        const mainSection = document.querySelector(".prod-atf-main");
+        const mainSection = document.querySelector(".prod-atf-main, .prod-atf");
         if (mainSection) {
             obs.disconnect(); // 관찰 중지
             waitForMainSection();
