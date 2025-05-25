@@ -37,7 +37,7 @@
         "48": "icons/icon-48.png",
         "128": "icons/icon-128.png"
     },
-    "host_permissions": ["<all_urls>"],
+    "host_permissions": ["<all_urls>", "https://voim.store/*"],
     "permissions": ["scripting", "activeTab", "storage", "tabs"],
     "commands": {
         "toggle_iframe": {
