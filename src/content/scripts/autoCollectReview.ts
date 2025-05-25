@@ -52,7 +52,7 @@ const renderReviewSummary = (summary: ReviewSummary | undefined) => {
             container.style.position = "relative";
             container.style.marginTop = "20px";
             container.style.marginBottom = "20px";
-            container.style.zIndex = "9999";
+            container.style.zIndex = "1";
 
             // voim-info-component 바로 뒤에 삽입
             infoComponent.parentNode.insertBefore(
@@ -104,7 +104,9 @@ const waitForElement = (
             if (timeElapsed >= timeout) {
                 clearInterval(timer);
                 console.error(
-                    `[voim] 요소 ${selector}를 ${timeout / 1000}초 안에 찾지 못했습니다.`,
+                    `[voim] 요소 ${selector}를 ${
+                        timeout / 1000
+                    }초 안에 찾지 못했습니다.`,
                 );
                 resolve(null);
             }

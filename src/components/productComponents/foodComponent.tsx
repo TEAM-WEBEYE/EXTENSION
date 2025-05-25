@@ -119,8 +119,8 @@ export const FoodComponent = () => {
                     backgroundColor: "#ffffff",
                     position: "absolute",
                     top: "610px",
-                    right: "490px",
-                    zIndex: 9999,
+                    right: "280px",
+                    zIndex: 1,
                     fontFamily: "KoddiUDOnGothic",
                     textAlign: "center",
                     fontSize: "20px",
@@ -142,8 +142,8 @@ export const FoodComponent = () => {
                 backgroundColor: "#ffffff",
                 position: "absolute",
                 top: "610px",
-                right: "490px",
-                zIndex: 9999,
+                right: "280px",
+                zIndex: 1,
                 fontFamily: "KoddiUDOnGothic",
             }}
         >

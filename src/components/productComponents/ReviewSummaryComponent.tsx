@@ -24,7 +24,7 @@ export const ReviewSummaryComponent = ({
         borderRadius: "20px",
         backgroundColor: "#ffffff",
         fontFamily: "KoddiUDOnGothic",
-        zIndex: 9999,
+        zIndex: 1,
         boxSizing: "border-box", // Include padding and border in the element's total width and height
     };
 

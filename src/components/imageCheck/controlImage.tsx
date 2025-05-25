@@ -74,7 +74,7 @@ export const ControlImage: React.FC<ControlImageProps> = ({ targetImg }) => {
                     position: "absolute",
                     top: position.top,
                     left: position.left,
-                    zIndex: 2147483647,
+                    zIndex: 1,
                     pointerEvents: "none",
                     opacity: showButton ? 1 : 0,
                     transition: "opacity 0.2s ease-in-out",

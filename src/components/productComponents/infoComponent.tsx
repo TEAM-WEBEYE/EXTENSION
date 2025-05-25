@@ -67,7 +67,7 @@ export const InfoComponent = () => {
                 borderRadius: "20px",
                 backgroundColor: "#ffffff",
                 fontFamily: "KoddiUDOnGothic",
-                zIndex: 9999,
+                zIndex: 1,
             }}
         >
             <h2
