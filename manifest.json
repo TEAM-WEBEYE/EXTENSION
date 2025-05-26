@@ -3,6 +3,15 @@
     "name": "voim",
     "version": "1.0.0",
     "description": "시각 정보 해독이 어려운 사용자를 위한 크롬 확장 프로그램",
+    "action": {
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png",
+            "48": "icons/icon-48.png",
+            "128": "icons/icon-128.png"
+        },
+        "default_title": "VOIM"
+    },
     "background": {
         "service_worker": "js/background.js"
     },
