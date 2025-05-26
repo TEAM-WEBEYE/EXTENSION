@@ -25,7 +25,8 @@
                 "js/iframe.js",
                 "icons/icon.png",
                 "iframe.html",
-                "images/search.png"
+                "images/search.png",
+                "fonts/*"
             ],
             "matches": ["<all_urls>"]
         }
