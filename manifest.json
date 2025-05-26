@@ -24,7 +24,6 @@
             "resources": [
                 "js/iframe.js",
                 "icons/icon.png",
-                "images/cursors/*.png",
                 "iframe.html",
                 "images/search.png"
             ],
