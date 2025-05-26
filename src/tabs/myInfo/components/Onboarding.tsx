@@ -48,9 +48,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <div>{sections[currentPage].title}</div>
                 <CloseButton onClick={handleClose} />
             </div>
-            <div>
+            <div className={`${fontClasses.fontCommon} px-2`}>
                 {sections[currentPage].phrase.map((text, index) => (
-                    <div className={fontClasses.fontCommon} key={index}>
+                    <div key={index}>
                         {text.split("\n").map((line, i) => (
                             <React.Fragment key={i}>
                                 {line}
