@@ -24,11 +24,17 @@ export const HealthComponent = () => {
                 return;
             }
 
-            const { birthYear, gender } = await chrome.storage.local.get([
-                "birthYear",
-                "gender",
-            ]);
-            console.log("[health api] 사용자 정보:", { birthYear, gender });
+            const { birthYear, gender, Allergies } =
+                await chrome.storage.local.get([
+                    "birthYear",
+                    "gender",
+                    "Allergies",
+                ]);
+            console.log("[health api] 사용자 정보:", {
+                birthYear,
+                gender,
+                Allergies,
+            });
 
             const rawHtml = targetEl.outerHTML
                 .replace(/\sonerror=\"[^\"]*\"/g, "")
@@ -46,7 +52,7 @@ export const HealthComponent = () => {
                         html: rawHtml,
                         birthYear: Number(birthYear),
                         gender: gender?.toUpperCase() || "UNKNOWN",
-                        allergies: [],
+                        allergies: Allergies || [],
                     },
                 },
                 (res) => {

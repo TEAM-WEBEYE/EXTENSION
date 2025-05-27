@@ -273,7 +273,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 html,
                 birthYear,
                 gender,
-                allergies,
+                allergies: allergies || [],
             }),
         })
             .then((res) => {
