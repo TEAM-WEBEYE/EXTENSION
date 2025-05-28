@@ -42,10 +42,12 @@ export const FoodComponent = () => {
     useEffect(() => {
         const fetchData = async (vendorEl: Element) => {
             try {
-                const { birthYear, gender } = await chrome.storage.local.get([
-                    "birthYear",
-                    "gender",
-                ]);
+                const { birthYear, gender, Allergies } =
+                    await chrome.storage.local.get([
+                        "birthYear",
+                        "gender",
+                        "Allergies",
+                    ]);
 
                 const productId =
                     window.location.href.match(/products\/(\d+)/)?.[1];
@@ -62,8 +64,10 @@ export const FoodComponent = () => {
                     html: rawHtml,
                     birthYear: Number(birthYear),
                     gender: gender.toUpperCase(),
-                    allergies: [],
+                    allergies: Allergies || [],
                 };
+
+                console.log("[voim] FOOD API 요청 payload:", payload);
 
                 const res = await sendFoodDataRequest(payload);
                 if (!res) throw new Error("응답 없음");
