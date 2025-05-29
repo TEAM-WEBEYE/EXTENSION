@@ -59,11 +59,9 @@ const extractTotalCount = (container: Element): number => {
 
 const extractStarRatings = (container: Element): number[] => {
     const ratings = [0, 0, 0, 0, 0]; // [최고, 좋음, 보통, 별로, 나쁨]
-    console.log("[voim] 별점 추출 시작");
 
     // 새로운 구조에서 별점별 개수 수집
     const starItems = container.querySelectorAll(".review-star-search-item");
-    console.log("[voim] 찾은 별점 항목 수:", starItems.length);
 
     starItems.forEach((item) => {
         const descElement = item.querySelector(".review-star-search-item-desc");
@@ -75,12 +73,6 @@ const extractStarRatings = (container: Element): number[] => {
             countElement?.textContent?.replace(/,/g, "") || "0",
             10,
         );
-
-        console.log("[voim] 별점 항목 처리:", {
-            desc,
-            countText: countElement?.textContent,
-            parsedCount: count,
-        });
 
         // 설명 텍스트에 따라 해당하는 인덱스에 개수 할당
         switch (desc) {
@@ -102,13 +94,11 @@ const extractStarRatings = (container: Element): number[] => {
         }
     });
 
-    console.log("[voim] 최종 별점 배열:", ratings);
     return ratings;
 };
 
 export const collectCoupangReviewData =
     async (): Promise<ReviewSummaryRequestPayload | null> => {
-        console.log("[voim] collectCoupangReviewData 시작");
         try {
             const selectors = [
                 ".review-star-search-selector",
@@ -116,50 +106,34 @@ export const collectCoupangReviewData =
             ];
             let container: Element | null = null;
 
-            console.log("[voim] 별점 컨테이너 찾기 시작");
             for (const selector of selectors) {
-                console.log(`[voim] 선택자 시도: ${selector}`);
                 container = await waitForElement(selector);
                 if (container) {
-                    console.log(`[voim] 컨테이너 찾음: ${selector}`);
                     break;
                 }
             }
 
             if (!container) {
                 console.error("[voim] 별점 컨테이너를 찾을 수 없습니다.");
-                console.log(
-                    "[voim] 현재 페이지 HTML:",
-                    document.body.innerHTML,
-                );
                 return null;
             }
 
-            console.log("[voim] 별점 데이터 추출 시작");
             const totalCount = extractTotalCount(container);
-            console.log("[voim] 총 리뷰 수:", totalCount);
 
             const ratings = extractStarRatings(container);
-            console.log("[voim] 추출된 별점:", ratings);
 
-            // 리뷰 텍스트 추출
-            console.log("[voim] 리뷰 텍스트 추출 시작");
             const reviewElements = document.querySelectorAll(
                 ".sdp-review__article__list__review__content, .review-content",
             );
-            console.log("[voim] 찾은 리뷰 수:", reviewElements.length);
 
             const reviews = Array.from(reviewElements).map((element) => {
                 const text = element.textContent || "";
                 return text.replace(/<br>/g, "\n").trim();
             });
 
-            console.log("[voim] 추출된 리뷰:", reviews);
-
             const productIdMatch =
                 window.location.href.match(/\/products\/(\d+)/);
             const productId = productIdMatch?.[1] ?? "";
-            console.log("[voim] 추출된 상품 ID:", productId);
 
             if (!productId) {
                 console.error("[voim] productId를 찾을 수 없습니다.");
@@ -171,12 +145,10 @@ export const collectCoupangReviewData =
                 reviewRating: { totalCount, ratings },
                 reviews,
             };
-            console.log("[voim] 최종 수집 데이터:", result);
 
             return result;
         } catch (error) {
             console.error("[voim] 리뷰 데이터 수집 중 오류:", error);
-            console.log("[voim] 현재 페이지 URL:", window.location.href);
             return null;
         }
     };
@@ -184,7 +156,6 @@ export const collectCoupangReviewData =
 export const sendReviewSummaryRequest = (
     payload: ReviewSummaryRequestPayload,
 ): Promise<ReviewSummaryData> => {
-    console.log("[voim] 리뷰 요약 요청 시작:", payload);
     return new Promise((resolve, reject) => {
         if (chrome.runtime.lastError) {
             console.error("[voim] 런타임 오류:", chrome.runtime.lastError);
@@ -201,8 +172,6 @@ export const sendReviewSummaryRequest = (
                     );
                     return reject(new Error(chrome.runtime.lastError.message));
                 }
-
-                console.log("[voim] 리뷰 요약 응답:", response);
 
                 if (!response || typeof response !== "object") {
                     console.error("[voim] 잘못된 응답 형식:", response);
@@ -229,14 +198,6 @@ export const sendReviewSummaryRequest = (
                     keywords,
                 } = res.data;
 
-                console.log("[voim] 리뷰 요약 데이터:", {
-                    totalCount,
-                    averageRating,
-                    positiveReviews,
-                    negativeReviews,
-                    keywords,
-                });
-
                 const valid =
                     typeof totalCount === "number" &&
                     typeof averageRating === "number" &&
@@ -257,7 +218,6 @@ export const sendReviewSummaryRequest = (
                     );
                 }
 
-                console.log("[voim] 리뷰 요약 처리 완료");
                 resolve(res.data);
             },
         );

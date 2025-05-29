@@ -51,17 +51,13 @@ const delay = (ms: number): Promise<void> =>
 
 const extractReviews = (): ReviewSummaryRequestPayload | null => {
     try {
-        console.log("[voim] extractReviews 시작");
-
         // 상품 ID 추출
         const productId = window.location.pathname.split("/").pop() || "";
-        console.log("[voim] 추출된 상품 ID:", productId);
 
         // 별점 컨테이너 찾기
         const starContainer = document.querySelector(
             ".review-star-search-selector, .sdp-review__article__order__star__option",
         );
-        console.log("[voim] 별점 컨테이너:", starContainer);
 
         if (!starContainer) {
             console.error("[voim] 별점 컨테이너를 찾을 수 없습니다.");
@@ -76,14 +72,12 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
             totalCountElement?.textContent?.replace(/,/g, "") || "0",
             10,
         );
-        console.log("[voim] 총 리뷰 수:", totalCount);
 
         // 별점 데이터 추출
         const ratings = [0, 0, 0, 0, 0]; // [최고, 좋음, 보통, 별로, 나쁨]
         const starItems = starContainer.querySelectorAll(
             ".review-star-search-item, .sdp-review__article__order__star__list__item",
         );
-        console.log("[voim] 찾은 별점 항목 수:", starItems.length);
 
         starItems.forEach((item) => {
             // 새로운 구조 처리
@@ -101,12 +95,6 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
                     countElement?.textContent?.replace(/,/g, "") || "0",
                     10,
                 );
-
-                console.log("[voim] 별점 항목 처리 (새 구조):", {
-                    desc,
-                    countText: countElement?.textContent,
-                    parsedCount: count,
-                });
 
                 switch (desc) {
                     case "최고":
@@ -133,31 +121,19 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
                     10,
                 );
 
-                console.log("[voim] 별점 항목 처리 (기존 구조):", {
-                    rating,
-                    countText: countElement?.textContent,
-                    parsedCount: count,
-                });
-
                 if (rating) {
                     const index = 5 - parseInt(rating, 10); // 5점은 0번 인덱스, 1점은 4번 인덱스
                     if (index >= 0 && index < 5) {
                         ratings[index] = count;
-                        console.log(
-                            `[voim] ${rating}점(${index}번 인덱스)에 ${count}개 할당`,
-                        );
                     }
                 }
             }
         });
 
-        console.log("[voim] 추출된 별점:", ratings);
-
         // 리뷰 텍스트 추출
         const reviewElements = document.querySelectorAll(
             ".sdp-review__article__list__review__content, .review-content",
         );
-        console.log("[voim] 찾은 리뷰 수:", reviewElements.length);
 
         const reviews = Array.from(reviewElements).map((element) => {
             const text = element.textContent || "";
@@ -173,7 +149,6 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
             reviews,
         };
 
-        console.log("[voim] 최종 추출 데이터:", result);
         return result;
     } catch (error) {
         console.error("[voim] 리뷰 데이터 추출 중 오류:", error);
@@ -182,41 +157,28 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
 };
 
 const initAutoCollectReview = async (): Promise<void> => {
-    console.log("[voim] initAutoCollectReview 시작");
     if (!isProductDetailPage()) {
-        console.log("[voim] 상품 상세 페이지가 아닙니다.");
         return;
     }
 
     try {
         // 페이지 초기 로드 대기
-        console.log("[voim] 페이지 로드 대기 중...");
+
         await delay(2000);
 
-        console.log("[voim] 리뷰 데이터 수집 시작");
         const reviewData = extractReviews();
         if (!reviewData) {
             console.error("[voim] 리뷰 데이터를 수집하지 못했습니다.");
             return;
         }
-        console.log("[voim] 수집된 리뷰 데이터:", reviewData);
 
         await delay(1000);
 
-        console.log("[voim] 리뷰 요약 요청 시작");
         const summary = await sendReviewSummaryRequest(reviewData);
-        console.log("[voim] 리뷰 요약 응답:", summary);
 
-        chrome.storage.local.set(
-            {
-                [`review_summary_${reviewData.productId}`]: summary,
-            },
-            () => {
-                console.info(
-                    `[voim] 리뷰 요약 데이터를 저장했습니다: review_summary_${reviewData.productId}`,
-                );
-            },
-        );
+        chrome.storage.local.set({
+            [`review_summary_${reviewData.productId}`]: summary,
+        });
     } catch (error) {
         console.error("[voim] 리뷰 자동 수집 중 오류 발생:", error);
         // 재시도 로직
