@@ -59,7 +59,7 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
 
         // 별점 컨테이너 찾기
         const starContainer = document.querySelector(
-            ".sdp-review__article__order__star__option",
+            ".review-star-search-selector, .sdp-review__article__order__star__option",
         );
         console.log("[voim] 별점 컨테이너:", starContainer);
 
@@ -70,7 +70,7 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
 
         // 총 리뷰 수 추출
         const totalCountElement = starContainer.querySelector(
-            ".js_reviewArticleOptionStarAllCount",
+            ".review-star-search-item:first-child .review-star-search-item-counts, .js_reviewArticleOptionStarAllCount",
         );
         const totalCount = parseInt(
             totalCountElement?.textContent?.replace(/,/g, "") || "0",
@@ -81,33 +81,72 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
         // 별점 데이터 추출
         const ratings = [0, 0, 0, 0, 0]; // [최고, 좋음, 보통, 별로, 나쁨]
         const starItems = starContainer.querySelectorAll(
-            ".sdp-review__article__order__star__list__item",
+            ".review-star-search-item, .sdp-review__article__order__star__list__item",
         );
         console.log("[voim] 찾은 별점 항목 수:", starItems.length);
 
         starItems.forEach((item) => {
-            const rating = item.getAttribute("data-rating");
+            // 새로운 구조 처리
+            const descElement = item.querySelector(
+                ".review-star-search-item-desc",
+            );
             const countElement = item.querySelector(
-                ".sdp-review__article__order__star__list__item__count",
-            );
-            const count = parseInt(
-                countElement?.textContent?.replace(/,/g, "") || "0",
-                10,
+                ".review-star-search-item-counts, .sdp-review__article__order__star__list__item__count",
             );
 
-            console.log("[voim] 별점 항목 처리:", {
-                rating,
-                countText: countElement?.textContent,
-                parsedCount: count,
-            });
+            if (descElement) {
+                // 새로운 구조
+                const desc = descElement.textContent?.trim() || "";
+                const count = parseInt(
+                    countElement?.textContent?.replace(/,/g, "") || "0",
+                    10,
+                );
 
-            if (rating) {
-                const index = 5 - parseInt(rating, 10); // 5점은 0번 인덱스, 1점은 4번 인덱스
-                if (index >= 0 && index < 5) {
-                    ratings[index] = count;
-                    console.log(
-                        `[voim] ${rating}점(${index}번 인덱스)에 ${count}개 할당`,
-                    );
+                console.log("[voim] 별점 항목 처리 (새 구조):", {
+                    desc,
+                    countText: countElement?.textContent,
+                    parsedCount: count,
+                });
+
+                switch (desc) {
+                    case "최고":
+                        ratings[0] = count;
+                        break;
+                    case "좋음":
+                        ratings[1] = count;
+                        break;
+                    case "보통":
+                        ratings[2] = count;
+                        break;
+                    case "별로":
+                        ratings[3] = count;
+                        break;
+                    case "나쁨":
+                        ratings[4] = count;
+                        break;
+                }
+            } else {
+                // 기존 구조
+                const rating = item.getAttribute("data-rating");
+                const count = parseInt(
+                    countElement?.textContent?.replace(/,/g, "") || "0",
+                    10,
+                );
+
+                console.log("[voim] 별점 항목 처리 (기존 구조):", {
+                    rating,
+                    countText: countElement?.textContent,
+                    parsedCount: count,
+                });
+
+                if (rating) {
+                    const index = 5 - parseInt(rating, 10); // 5점은 0번 인덱스, 1점은 4번 인덱스
+                    if (index >= 0 && index < 5) {
+                        ratings[index] = count;
+                        console.log(
+                            `[voim] ${rating}점(${index}번 인덱스)에 ${count}개 할당`,
+                        );
+                    }
                 }
             }
         });
@@ -116,7 +155,7 @@ const extractReviews = (): ReviewSummaryRequestPayload | null => {
 
         // 리뷰 텍스트 추출
         const reviewElements = document.querySelectorAll(
-            ".sdp-review__article__list__review__content",
+            ".sdp-review__article__list__review__content, .review-content",
         );
         console.log("[voim] 찾은 리뷰 수:", reviewElements.length);
 
