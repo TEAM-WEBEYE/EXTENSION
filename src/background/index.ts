@@ -39,6 +39,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             [STORAGE_KEYS.THEME_MODE]: DEFAULT_THEME,
             [STORAGE_KEYS.FONT_SIZE]: DEFAULT_FONT_SIZE,
             [STORAGE_KEYS.FONT_WEIGHT]: DEFAULT_FONT_WEIGHT,
+            [STORAGE_KEYS.STYLES_ENABLED]: true,
         };
         chrome.storage.local.set(defaultSettings, () => {
             logger.debug(
@@ -70,11 +71,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 );
             }
         });
-        return true; // 비동기 응답을 위해 true 반환
+        return true;
     }
 
     if (message.type === "CART_PAGE") {
-        // iframe으로 메시지 전달
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const activeTab = tabs[0];
             if (activeTab?.id) {
@@ -306,38 +306,53 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "FETCH_REVIEW_SUMMARY") {
         const { productId, reviewRating, reviews } = message.payload;
 
+        const requestBody = JSON.stringify({
+            productId,
+            reviewRating,
+            reviews,
+        });
+
         fetch("https://voim.store/api/v1/review/summary", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId, reviewRating, reviews }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: requestBody,
         })
-            .then((res) => res.json())
-            .then((data) => {
-                if (sender.tab?.id) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        type: "REVIEW_SUMMARY_RESPONSE",
-                        data: data.data,
-                    });
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(`서버 응답 오류: ${res.status}`);
                 }
-                sendResponse({
+                return res.json();
+            })
+            .then((data) => {
+                const responsePayload = {
                     type: "REVIEW_SUMMARY_RESPONSE",
                     data: data.data,
-                });
-            })
-            .catch((err) => {
-                console.error("REVIEW SUMMARY 오류:", err);
+                };
+
                 if (sender.tab?.id) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        type: "REVIEW_SUMMARY_ERROR",
-                        error: err.message,
-                    });
+                    chrome.tabs.sendMessage(sender.tab.id, responsePayload);
                 }
-                sendResponse({
+
+                sendResponse(responsePayload);
+            })
+            .catch((error) => {
+                const errorPayload = {
                     type: "REVIEW_SUMMARY_ERROR",
-                    error: err.message,
-                });
+                    error: error.message || "알 수 없는 오류",
+                };
+
+                console.error("[voim] REVIEW SUMMARY 오류:", error);
+
+                if (sender.tab?.id) {
+                    chrome.tabs.sendMessage(sender.tab.id, errorPayload);
+                }
+
+                sendResponse(errorPayload);
             });
 
+        // sendResponse를 비동기적으로 사용할 수 있도록 true 반환
         return true;
     }
 

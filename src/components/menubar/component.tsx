@@ -4,6 +4,7 @@ import { useTheme } from "@src/contexts/ThemeContext";
 
 import { BaseButton } from "../baseButton/component";
 import { CloseButton } from "../closeButton/component";
+import Loading from "../loading/component";
 
 interface ModalProps {
     isOpen: boolean;
@@ -143,7 +144,7 @@ export function Menubar({
                     >
                         설정 초기화
                     </BaseButton>
-
+                    <Loading />
                     <CloseButton onClick={onClose} />
                 </div>
 

@@ -3,16 +3,10 @@ interface ReviewRating {
     ratings: number[];
 }
 
-interface ReviewCategory {
-    [key: string]: {
-        [key: string]: number;
-    };
-}
-
 interface ReviewSummaryRequestPayload {
     productId: string;
     reviewRating: ReviewRating;
-    reviews: ReviewCategory;
+    reviews: string[];
 }
 
 interface ReviewSummaryData {
@@ -34,21 +28,18 @@ const waitForElement = (
     timeout = 10000,
 ): Promise<Element | null> => {
     return new Promise((resolve) => {
-        if (document.querySelector(selector)) {
-            return resolve(document.querySelector(selector));
-        }
+        const el = document.querySelector(selector);
+        if (el) return resolve(el);
 
         const observer = new MutationObserver(() => {
-            if (document.querySelector(selector)) {
+            const found = document.querySelector(selector);
+            if (found) {
                 observer.disconnect();
-                resolve(document.querySelector(selector));
+                resolve(found);
             }
         });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
         setTimeout(() => {
             observer.disconnect();
@@ -57,144 +48,120 @@ const waitForElement = (
     });
 };
 
-export const collectCoupangReviewData =
-    async (): Promise<ReviewSummaryRequestPayload | null> => {
-        try {
-            // 첫 번째 케이스: .review-star-search-selector
-            let starRatingContainer = await waitForElement(
-                ".review-star-search-selector",
-            );
+const extractTotalCount = (container: Element): number => {
+    const text =
+        container
+            .querySelector(
+                ".review-star-search-item-counts, .js_reviewArticleOptionStarAllCount",
+            )
+            ?.textContent?.trim() ?? "0";
+    return parseInt(text.replace(/,/g, ""), 10);
+};
 
-            // 두 번째 케이스: .sdp-review__article__order__star__option
-            if (!starRatingContainer) {
-                starRatingContainer = await waitForElement(
-                    ".sdp-review__article__order__star__option",
+const extractStarRatings = (container: Element): number[] => {
+    const ratings = [0, 0, 0, 0, 0]; // [최고, 좋음, 보통, 별로, 나쁨]
+    console.log("[voim] 별점 추출 시작");
+
+    // 별점별 개수 수집
+    const starItems = container.querySelectorAll(
+        ".sdp-review__article__order__star__list__item",
+    );
+    console.log("[voim] 찾은 별점 항목 수:", starItems.length);
+
+    starItems.forEach((item) => {
+        const rating = item.getAttribute("data-rating");
+        const countElement = item.querySelector(
+            ".sdp-review__article__order__star__list__item__count",
+        );
+        const count = parseInt(
+            countElement?.textContent?.replace(/,/g, "") || "0",
+            10,
+        );
+
+        console.log("[voim] 별점 항목 처리:", {
+            rating,
+            countText: countElement?.textContent,
+            parsedCount: count,
+        });
+
+        // data-rating 값에 따라 해당하는 인덱스에 개수 할당
+        if (rating) {
+            const index = 5 - parseInt(rating, 10); // 5점은 0번 인덱스, 1점은 4번 인덱스
+            if (index >= 0 && index < 5) {
+                ratings[index] = count;
+                console.log(
+                    `[voim] ${rating}점(${index}번 인덱스)에 ${count}개 할당`,
                 );
             }
+        }
+    });
 
-            if (!starRatingContainer) {
+    console.log("[voim] 최종 별점 배열:", ratings);
+    return ratings;
+};
+
+export const collectCoupangReviewData =
+    async (): Promise<ReviewSummaryRequestPayload | null> => {
+        console.log("[voim] collectCoupangReviewData 시작");
+        try {
+            const selectors = [
+                ".review-star-search-selector",
+                ".sdp-review__article__order__star__option",
+            ];
+            let container: Element | null = null;
+
+            console.log("[voim] 별점 컨테이너 찾기 시작");
+            for (const selector of selectors) {
+                console.log(`[voim] 선택자 시도: ${selector}`);
+                container = await waitForElement(selector);
+                if (container) {
+                    console.log(`[voim] 컨테이너 찾음: ${selector}`);
+                    break;
+                }
+            }
+
+            if (!container) {
                 console.error("[voim] 별점 컨테이너를 찾을 수 없습니다.");
                 return null;
             }
 
-            // 전체 리뷰 수 수집 (두 가지 케이스 모두 처리)
-            const totalCountText =
-                starRatingContainer
-                    .querySelector(
-                        ".review-star-search-item-counts, .js_reviewArticleOptionStarAllCount",
-                    )
-                    ?.textContent?.trim() || "0";
-            const totalCount = parseInt(totalCountText.replace(/,/g, ""));
+            console.log("[voim] 별점 데이터 추출 시작");
+            const totalCount = extractTotalCount(container);
+            console.log("[voim] 총 리뷰 수:", totalCount);
 
-            type RatingKey = "최고" | "좋음" | "보통" | "별로" | "나쁨";
-            const ratingsMap: Record<RatingKey, number> = {
-                최고: 0,
-                좋음: 0,
-                보통: 0,
-                별로: 0,
-                나쁨: 0,
-            };
+            const ratings = extractStarRatings(container);
+            console.log("[voim] 추출된 별점:", ratings);
 
-            // 별점별 개수 수집 (두 가지 케이스 모두 처리)
-            const starItems = starRatingContainer.querySelectorAll(
-                ".review-star-search-item, .sdp-review__article__order__star__list__item",
+            // 리뷰 텍스트 추출
+            console.log("[voim] 리뷰 텍스트 추출 시작");
+            const reviewElements = document.querySelectorAll(
+                ".sdp-review__article__list__review__content",
             );
-            starItems.forEach((item) => {
-                const ratingText = item
-                    .querySelector(
-                        ".review-star-search-item-desc, .sdp-review__article__order__star__list__item__content",
-                    )
-                    ?.textContent?.trim();
-                const countText =
-                    item
-                        .querySelector(
-                            ".review-star-search-item-counts, .sdp-review__article__order__star__list__item__count",
-                        )
-                        ?.textContent?.trim() || "0";
+            console.log("[voim] 찾은 리뷰 수:", reviewElements.length);
 
-                if (ratingText && ratingText in ratingsMap) {
-                    ratingsMap[ratingText as RatingKey] = parseInt(
-                        countText.replace(/,/g, ""),
-                    );
-                }
+            const reviews = Array.from(reviewElements).map((element) => {
+                const text = element.textContent || "";
+                return text.replace(/<br>/g, "\n").trim();
             });
 
-            // 배열 형태로 변환 (최고 -> 나쁨 순서)
-            const ratingsArray: number[] = [
-                ratingsMap.최고,
-                ratingsMap.좋음,
-                ratingsMap.보통,
-                ratingsMap.별로,
-                ratingsMap.나쁨,
-            ];
-
-            // 리뷰 섹션 데이터 수집
-            const reviewSections = document.querySelectorAll(
-                ".review-summary-survey-section, .sdp-review__average__summary__section",
-            );
-            if (!reviewSections.length) {
-                console.error("[voim] 리뷰 섹션을 찾을 수 없습니다.");
-                return null;
-            }
-
-            const reviews: ReviewCategory = {};
-
-            reviewSections.forEach((section) => {
-                const categoryTitle = section
-                    .querySelector(
-                        "h4, .sdp-review__average__summary__section__title",
-                    )
-                    ?.textContent?.trim();
-                if (!categoryTitle) return;
-
-                const categoryRatings: { [key: string]: number } = {};
-                const items = section.querySelectorAll(
-                    ".review-summary-survey-answers > li, .sdp-review__average__summary__section__list__item",
-                );
-
-                items.forEach((item) => {
-                    const answer = item
-                        .querySelector(
-                            ".review-summary-survey-answer-title, .sdp-review__average__summary__section__list__item__answer",
-                        )
-                        ?.textContent?.trim();
-                    const percentText = item
-                        .querySelector(
-                            ".review-summary-survey-answer-percentage, .sdp-review__average__summary__section__list__item__graph__percent",
-                        )
-                        ?.textContent?.trim();
-
-                    if (answer && percentText) {
-                        const percent = parseInt(percentText.replace("%", ""));
-                        if (!isNaN(percent)) {
-                            categoryRatings[answer] = percent;
-                        }
-                    }
-                });
-
-                if (Object.keys(categoryRatings).length > 0) {
-                    reviews[categoryTitle] = categoryRatings;
-                }
-            });
-
-            // productId 추출 (URL에서)
-            const url = window.location.href;
-            const productIdMatch = url.match(/\/products\/(\d+)/);
-            const productId = productIdMatch ? productIdMatch[1] : "";
+            const productIdMatch =
+                window.location.href.match(/\/products\/(\d+)/);
+            const productId = productIdMatch?.[1] ?? "";
+            console.log("[voim] 추출된 상품 ID:", productId);
 
             if (!productId) {
                 console.error("[voim] productId를 찾을 수 없습니다.");
                 return null;
             }
 
-            return {
+            const result = {
                 productId,
-                reviewRating: {
-                    totalCount,
-                    ratings: ratingsArray,
-                },
+                reviewRating: { totalCount, ratings },
                 reviews,
             };
+            console.log("[voim] 최종 수집 데이터:", result);
+
+            return result;
         } catch (error) {
             console.error("[voim] 리뷰 데이터 수집 중 오류:", error);
             return null;
@@ -206,10 +173,7 @@ export const sendReviewSummaryRequest = (
 ): Promise<ReviewSummaryData> => {
     return new Promise((resolve, reject) => {
         chrome.runtime.sendMessage(
-            {
-                type: "FETCH_REVIEW_SUMMARY",
-                payload,
-            },
+            { type: "FETCH_REVIEW_SUMMARY", payload },
             (response: unknown) => {
                 if (!response || typeof response !== "object") {
                     return reject(new Error("Invalid response format"));
@@ -220,14 +184,10 @@ export const sendReviewSummaryRequest = (
                 if (res.type === "REVIEW_SUMMARY_ERROR") {
                     return reject(
                         new Error(
-                            res.message ||
+                            res.message ??
                                 "리뷰 요약 처리 중 오류가 발생했습니다",
                         ),
                     );
-                }
-
-                if (!res.data) {
-                    return reject(new Error("응답 데이터가 없습니다"));
                 }
 
                 const {
@@ -238,50 +198,24 @@ export const sendReviewSummaryRequest = (
                     keywords,
                 } = res.data;
 
-                // 응답 데이터 유효성 검사
-                const isValidCount =
-                    typeof totalCount === "number" && totalCount >= 0;
-                const isValidRating =
+                const valid =
+                    typeof totalCount === "number" &&
                     typeof averageRating === "number" &&
-                    averageRating >= 0 &&
-                    averageRating <= 5;
-                const isValidPositive =
                     Array.isArray(positiveReviews) &&
-                    positiveReviews.length > 0 &&
-                    positiveReviews.every(
-                        (review) => typeof review === "string",
-                    );
-                const isValidNegative =
                     Array.isArray(negativeReviews) &&
-                    negativeReviews.length > 0 &&
-                    negativeReviews.every(
-                        (review) => typeof review === "string",
-                    );
-                const isValidKeywords =
                     Array.isArray(keywords) &&
-                    keywords.length > 0 &&
-                    keywords.every((keyword) => typeof keyword === "string");
+                    positiveReviews.every((r) => typeof r === "string") &&
+                    negativeReviews.every((r) => typeof r === "string") &&
+                    keywords.every((k) => typeof k === "string");
 
-                if (
-                    isValidCount &&
-                    isValidRating &&
-                    isValidPositive &&
-                    isValidNegative &&
-                    isValidKeywords
-                ) {
-                    resolve(res.data);
-                } else {
-                    console.error("리뷰 요약 데이터 형식 오류", {
-                        totalCount,
-                        averageRating,
-                        positiveReviews,
-                        negativeReviews,
-                        keywords,
-                    });
-                    reject(
+                if (!valid) {
+                    console.error("리뷰 요약 데이터 형식 오류", res.data);
+                    return reject(
                         new Error("올바른 형식의 리뷰 요약 데이터가 아닙니다"),
                     );
                 }
+
+                resolve(res.data);
             },
         );
     });
