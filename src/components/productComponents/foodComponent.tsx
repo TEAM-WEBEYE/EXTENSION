@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { sendFoodDataRequest } from "../../content/apiSetting/sendFoodDataRequest";
 import Loading from "../Loading/component";
+import { useTheme } from "@src/contexts/ThemeContext";
 
 interface Nutrient {
     nutrientType: string;
@@ -45,6 +46,8 @@ const allergyNameMap: Record<string, string> = {
 };
 
 export const FoodComponent = () => {
+    const { fontClasses, theme } = useTheme();
+    const isDarkMode = theme === "dark";
     const [nutrientAlerts, setNutrientAlerts] = useState<Nutrient[] | null>(
         null,
     );
@@ -176,24 +179,17 @@ export const FoodComponent = () => {
     if (nutrientAlerts === null || allergyTypes === null) {
         return (
             <div
-                style={{
-                    padding: "16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "320px",
-                }}
+                className={`${fontClasses.fontCommon} ${
+                    isDarkMode ? "text-grayscale-100" : "text-grayscale-900"
+                }`}
             >
-                <div style={{ width: "260px", height: "243px" }}>
+                <div>
                     <Loading />
                 </div>
                 <div
-                    style={{
-                        marginTop: "12px",
-                        ...commonTextStyle24,
-                        color: "#505156",
-                    }}
+                    className={`${fontClasses.fontCommon} ${
+                        isDarkMode ? "text-grayscale-100" : "text-grayscale-900"
+                    }`}
                 >
                     제품 정보를 분석 중입니다.
                 </div>
@@ -203,92 +199,91 @@ export const FoodComponent = () => {
 
     return (
         <div
-            style={{
-                padding: "16px",
-                backgroundColor: "#ffffff",
-                fontFamily: "KoddiUDOnGothic",
-            }}
+            className={`${fontClasses.fontCommon}  ${
+                isDarkMode
+                    ? "text-grayscale-100 bg-grayscale-900"
+                    : "text-grayscale-900 bg-white"
+            }`}
         >
-            <p style={commonTextStyle}>식품 영양 및 알러지 성분</p>
-            <div style={{ margin: "16px 0" }} />
+            <p className={`${fontClasses.fontHeading} mb-[40px] `}>
+                식품 영양 및 알러지 성분
+            </p>
+
             <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "12px",
-                    ...commonTextStyle,
-                }}
+                className={`${fontClasses.fontCommon} ${
+                    isDarkMode ? "text-grayscale-100" : "text-grayscale-900"
+                }`}
             >
                 <span>하루 기준 섭취량의 40% 넘는 영양성분</span>
                 <span>총 {nutrientAlerts.length}개</span>
             </div>
             {nutrientOpen && nutrientAlerts.length > 0 && (
                 <div
-                    style={{
-                        backgroundColor: "#F5F7FB",
-                        padding: "16px",
-                        marginTop: "12px",
-                        borderRadius: "12px",
-                    }}
+                    className={`${isDarkMode ? "bg-grayscale-800 " : "bg-grayscale-200 "} px-6 py-[18px] rounded-[14px] mt-4 mb-[30px]`}
                 >
                     {nutrientAlerts.map((item, idx) => (
-                        <div
-                            key={idx}
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                ...commonTextStyle24,
-                                marginBottom:
-                                    idx < nutrientAlerts.length - 1
-                                        ? "12px"
-                                        : "0",
-                            }}
-                        >
-                            <span>
-                                {nutrientNameMap[item.nutrientType] ||
-                                    item.nutrientType}
-                            </span>
-                            <span>{item.percentage}%</span>
+                        <div key={idx}>
+                            <div
+                                className={`${fontClasses.fontCommon} ${
+                                    isDarkMode
+                                        ? "text-grayscale-100"
+                                        : "text-grayscale-900"
+                                }`}
+                            >
+                                <span className="mr-1">
+                                    {nutrientNameMap[item.nutrientType] ||
+                                        item.nutrientType}{" "}
+                                </span>
+                                <span>{item.percentage}%</span>
+                            </div>
+
+                            {idx !== nutrientAlerts.length - 1 && (
+                                <div
+                                    className={`${
+                                        isDarkMode
+                                            ? "bg-grayscale-700"
+                                            : "bg-grayscale-300"
+                                    } my-[15px] w-full h-[2px]`}
+                                />
+                            )}
                         </div>
                     ))}
                 </div>
             )}
 
             <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "12px",
-                    fontWeight: "bold",
-                    ...commonTextStyle,
-                }}
+                className={` ${fontClasses.fontCommon} ${
+                    isDarkMode ? "text-grayscale-100" : "text-grayscale-900"
+                }`}
             >
                 <span>알레르기 유발 성분</span>
                 <span>총 {allergyTypes.length}개</span>
             </div>
             {allergyOpen && allergyTypes.length > 0 && (
                 <div
-                    style={{
-                        backgroundColor: "#F5F7FB",
-                        padding: "16px",
-                        marginTop: "12px",
-                        borderRadius: "12px",
-                    }}
+                    className={`${isDarkMode ? "bg-grayscale-800 " : "bg-grayscale-200 "} px-6 py-[18px] rounded-[14px] mt-4`}
                 >
                     {allergyTypes.map((item, idx) => (
-                        <div
-                            key={idx}
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                ...commonTextStyle24,
-                                marginBottom:
-                                    idx < allergyTypes.length - 1
-                                        ? "12px"
-                                        : "0",
-                            }}
-                        >
-                            {allergyNameMap[item] || item}
+                        <div key={idx}>
+                            <div
+                                className={`${fontClasses.fontCommon} ${
+                                    isDarkMode
+                                        ? "text-grayscale-100"
+                                        : "text-grayscale-900"
+                                }`}
+                            >
+                                {allergyNameMap[item] || item}
+                            </div>
+
+                            {idx !== allergyTypes.length - 1 && (
+                                <div
+                                    className={`${
+                                        isDarkMode
+                                            ? "bg-grayscale-700"
+                                            : "bg-grayscale-300"
+                                    } my-[15px] w-full h-[2px]`}
+                                />
+                            )}
                         </div>
                     ))}
                 </div>
