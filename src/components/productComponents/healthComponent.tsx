@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { sendHealthDataRequest } from "../../content/apiSetting/sendHealthDataRequest";
 import Loading from "../Loading/component";
+import { useTheme } from "@src/contexts/ThemeContext";
 
 const healthEffectMap: Record<string, string> = {
     IMMUNE: "면역기능",
@@ -38,6 +39,8 @@ const healthEffectMap: Record<string, string> = {
 };
 
 export const HealthComponent = () => {
+    const { fontClasses, theme } = useTheme();
+    const isDarkMode = theme === "dark";
     const [healthTypes, setHealthTypes] = useState<string[] | null>(null);
 
     const commonTextStyle: React.CSSProperties = {
@@ -140,24 +143,13 @@ export const HealthComponent = () => {
     if (healthTypes === null) {
         return (
             <div
-                style={{
-                    padding: "16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "320px",
-                }}
+                className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
             >
-                <div style={{ width: "260px", height: "243px" }}>
+                <div>
                     <Loading />
                 </div>
                 <div
-                    style={{
-                        marginTop: "12px",
-                        ...commonTextStyle24,
-                        color: "#505156",
-                    }}
+                    className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
                 >
                     제품 정보를 분석 중입니다.
                 </div>
@@ -167,41 +159,35 @@ export const HealthComponent = () => {
 
     return (
         <div
-            style={{
-                padding: "16px",
-                backgroundColor: "#ffffff",
-                fontFamily: "KoddiUDOnGothic",
-            }}
+            className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100 bg-grayscale-900" : "text-grayscale-900 bg-white"}`}
         >
-            <p style={commonTextStyle}>
+            <p className={`${fontClasses.fontHeading} mb-[40px]`}>
                 해당 제품의 기능성 효능 {healthTypes.length}가지
             </p>
-            <div style={{ margin: "16px 0" }} />
+
+            <div
+                className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
+            >
+                <span>검출된 기능성 효능</span>
+                <span>총 {healthTypes.length}개</span>
+            </div>
+
             {healthTypes.length > 0 && (
                 <div
-                    style={{
-                        backgroundColor: "#F5F7FB",
-                        padding: "16px",
-                        marginTop: "12px",
-                        borderRadius: "12px",
-                    }}
+                    className={`${isDarkMode ? "bg-grayscale-800" : "bg-grayscale-200"} px-6 py-[18px] rounded-[14px] mt-4`}
                 >
                     {healthTypes.map((item, idx) => (
-                        <div
-                            key={idx}
-                            style={{
-                                backgroundColor: "#F5F7FB",
-                                ...commonTextStyle24,
-                                marginBottom:
-                                    idx < healthTypes.length - 1 ? "12px" : "0",
-                                borderBottom:
-                                    idx < healthTypes.length - 1
-                                        ? "1px solid #EAEDF4"
-                                        : "none",
-                                paddingBottom: "12px",
-                            }}
-                        >
-                            {healthEffectMap[item] || item}
+                        <div key={idx}>
+                            <div
+                                className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
+                            >
+                                {healthEffectMap[item] || item}
+                            </div>
+                            {idx !== healthTypes.length - 1 && (
+                                <div
+                                    className={`${isDarkMode ? "bg-grayscale-700" : "bg-grayscale-300"} my-[15px] w-full h-[2px]`}
+                                />
+                            )}
                         </div>
                     ))}
                 </div>

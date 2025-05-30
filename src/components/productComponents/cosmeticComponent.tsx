@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { sendCosmeticDataRequest } from "../../content/apiSetting/sendCosmeticDataRequest";
 import Loading from "../Loading/component";
+import { useTheme } from "@src/contexts/ThemeContext";
 
 const INGREDIENT_KO_MAP: Record<string, string> = {
     avobenzone: "아보벤존",
@@ -27,25 +28,12 @@ const INGREDIENT_KO_MAP: Record<string, string> = {
 };
 
 export const CosmeticComponent = () => {
+    const { fontClasses, theme } = useTheme();
+    const isDarkMode = theme === "dark";
     const [detectedIngredients, setDetectedIngredients] = useState<string[]>(
         [],
     );
     const [isLoading, setIsLoading] = useState(true);
-
-    const commonTextStyle: React.CSSProperties = {
-        fontFamily: "KoddiUD OnGothic",
-        fontSize: "28px",
-        fontWeight: 700,
-        lineHeight: "150%",
-        textAlign: "left",
-    };
-    const commonTextStyle24: React.CSSProperties = {
-        fontFamily: "KoddiUD OnGothic",
-        fontSize: "24px",
-        fontWeight: 700,
-        lineHeight: "150%",
-        textAlign: "left",
-    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -115,24 +103,13 @@ export const CosmeticComponent = () => {
     if (isLoading) {
         return (
             <div
-                style={{
-                    padding: "16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "320px",
-                }}
+                className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
             >
-                <div style={{ width: "260px", height: "243px" }}>
+                <div>
                     <Loading />
                 </div>
                 <div
-                    style={{
-                        marginTop: "12px",
-                        ...commonTextStyle24,
-                        color: "#505156",
-                    }}
+                    className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
                 >
                     제품 정보를 분석 중입니다.
                 </div>
@@ -142,50 +119,39 @@ export const CosmeticComponent = () => {
 
     return (
         <div
-            style={{
-                padding: "16px",
-                backgroundColor: "#ffffff",
-                fontFamily: "KoddiUDOnGothic",
-            }}
+            className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100 bg-grayscale-900" : "text-grayscale-900 bg-white"}`}
         >
-            <p style={commonTextStyle}>[화장품] 성분 안내</p>
+            <p className={`${fontClasses.fontHeading} mb-[40px]`}>
+                [화장품] 성분 안내
+            </p>
+
             <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "12px",
-                    ...commonTextStyle,
-                }}
+                className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
             >
-                {detectedIngredients.length > 0 && (
-                    <div
-                        style={{
-                            backgroundColor: "#F5F7FB",
-                            padding: "16px",
-                            marginTop: "12px",
-                            borderRadius: "12px",
-                            width: "100%",
-                        }}
-                    >
-                        {detectedIngredients.map((item, idx) => (
+                <span>검출된 성분</span>
+                <span>총 {detectedIngredients.length}개</span>
+            </div>
+
+            {detectedIngredients.length > 0 && (
+                <div
+                    className={`${isDarkMode ? "bg-grayscale-800" : "bg-grayscale-200"} px-6 py-[18px] rounded-[14px] mt-4`}
+                >
+                    {detectedIngredients.map((item, idx) => (
+                        <div key={idx}>
                             <div
-                                key={idx}
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    ...commonTextStyle24,
-                                    marginBottom:
-                                        idx < detectedIngredients.length - 1
-                                            ? "12px"
-                                            : "0",
-                                }}
+                                className={`${fontClasses.fontCommon} ${isDarkMode ? "text-grayscale-100" : "text-grayscale-900"}`}
                             >
                                 {item}
                             </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                            {idx !== detectedIngredients.length - 1 && (
+                                <div
+                                    className={`${isDarkMode ? "bg-grayscale-700" : "bg-grayscale-300"} my-[15px] w-full h-[2px]`}
+                                />
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
