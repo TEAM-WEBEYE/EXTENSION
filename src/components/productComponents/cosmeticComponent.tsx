@@ -148,7 +148,7 @@ export const CosmeticComponent = () => {
                 fontFamily: "KoddiUDOnGothic",
             }}
         >
-            <p style={commonTextStyle}>[화장품] 성분 안내</p>
+            <p style={commonTextStyle}>주의 성분 및 알레르기 성분</p>
             <div
                 style={{
                     display: "flex",
