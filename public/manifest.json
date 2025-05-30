@@ -1,0 +1,80 @@
+{
+    "manifest_version": 3,
+    "name": "voim",
+    "version": "2.0.0",
+    "description": "시각 정보 해독이 어려운 사용자를 위한 크롬 확장 프로그램",
+    "action": {
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png",
+            "48": "icons/icon-48.png",
+            "128": "icons/icon-128.png"
+        },
+        "default_title": "VOIM"
+    },
+    "background": {
+        "service_worker": "js/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["js/content.js"],
+            "run_at": "document_end"
+        },
+        {
+            "matches": ["*://*.coupang.com/vp/*"],
+            "js": ["js/autoCollectReview.js"],
+            "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "js/iframe.js",
+                "icons/icon.png",
+                "iframe.html",
+                "images/search.png",
+                "fonts/*"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "icons": {
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    },
+    "host_permissions": ["<all_urls>", "https://voim.store/*"],
+    "permissions": ["scripting", "activeTab", "storage", "tabs"],
+    "commands": {
+        "toggle_iframe": {
+            "suggested_key": {
+                "default": "Alt+V",
+                "mac": "Alt+V"
+            },
+            "description": "아이콘 끄기/키기"
+        },
+        "toggle_modal": {
+            "suggested_key": {
+                "default": "Alt+O",
+                "mac": "Alt+O"
+            },
+            "description": "모달 열기/닫기"
+        },
+        "toggle_sidebar": {
+            "suggested_key": {
+                "default": "Alt+I",
+                "mac": "Alt+I"
+            },
+            "description": "사이드바 열기/닫기"
+        },
+        "toggle_all_features": {
+            "suggested_key": {
+                "default": "Alt+A",
+                "mac": "Alt+A"
+            },
+            "description": "모든 기능 끄기/키기"
+        }
+    }
+}

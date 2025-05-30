@@ -1,0 +1,10 @@
+@font-face {
+    font-family: "KoddiUDOnGothic-Bold";
+    src:
+        url("../assets/fonts/KoddiUDOnGothic-Bold.woff2") format("woff2"),
+        url("../assets/fonts/KoddiUDOnGothic-Bold.woff") format("woff"),
+        url("../assets/fonts/KoddiUDOnGothic-Bold.eot")
+            format("embedded-opentype");
+    font-weight: normal;
+    font-style: normal;
+}

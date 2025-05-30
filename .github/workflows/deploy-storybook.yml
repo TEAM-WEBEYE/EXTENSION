@@ -1,0 +1,30 @@
+name: Deploy Storybook to GitHub Pages
+
+on:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: write
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: Build Storybook
+              run: yarn build-storybook -o storybook-static
+
+            - name: Deploy to GitHub Pages
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                  github_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+                  publish_dir: storybook-static
+                  publish_branch: gh-pages
