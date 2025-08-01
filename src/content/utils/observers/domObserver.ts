@@ -1,7 +1,7 @@
-import { FontStyle } from "../types";
-import { applyFontStyleToNode } from "../styles/fontStyles";
-import { targetSelectors } from "../constants";
-import { STORAGE_KEYS } from "../../background/constants";
+import { FontStyle } from "../../types";
+import { applyFontStyleToNode } from "../../core/styles/fontStyles";
+import { targetSelectors } from "../../constants";
+import { STORAGE_KEYS } from "../../../background/constants";
 
 /**
  * DOM 변경을 감지하는 MutationObserver를 초기화합니다.

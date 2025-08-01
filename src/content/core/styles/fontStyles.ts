@@ -1,5 +1,5 @@
-import { FontStyle } from "../types";
-import { targetSelectors } from "../constants";
+import { targetSelectors } from "@src/content/constants";
+import { FontStyle } from "@src/content/types";
 
 /**
  * 폰트 스타일을 웹 페이지의 요소들에 적용합니다.

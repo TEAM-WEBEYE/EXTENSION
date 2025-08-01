@@ -1,20 +1,8 @@
-import { FontStyle } from "../types";
-import { applyFontStyle } from "../styles/fontStyles";
-import { applyModeStyle } from "../styles/modeStyles";
-import {
-    createIframe,
-    removeIframe,
-    restoreIframe,
-} from "../iframe/iframeManager";
-import {
-    STORAGE_KEYS,
-    DEFAULT_THEME,
-    DEFAULT_FONT_SIZE,
-    DEFAULT_FONT_WEIGHT,
-    EXTENSION_IFRAME_ID,
-} from "../../background/constants";
-import { fontSizeMap, fontWeightMap, modeStyleMap } from "../constants";
-import { FontSizeType, FontWeightType, ModeType } from "../types";
+import { DEFAULT_FONT_SIZE, DEFAULT_FONT_WEIGHT, DEFAULT_THEME, STORAGE_KEYS } from "@src/background/constants";
+import { EXTENSION_IFRAME_ID, fontSizeMap, fontWeightMap } from "@src/content/constants";
+import { FontSizeType, FontStyle, FontWeightType, ModeType } from "@src/content/types";
+import { removeIframe, restoreIframe } from "@src/content/utils/iframe/iframeManager";
+import { applyFontStyle, applyModeStyle } from "../styles";
 
 let originalSettings: {
     fontSize?: string;

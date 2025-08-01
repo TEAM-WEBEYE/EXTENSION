@@ -1,6 +1,3 @@
-import { modeStyleMap } from "../constants";
-import { ModeType } from "../types";
-
 /**
  * 라이트/다크 모드 스타일을 웹 페이지에 적용합니다.
  * @param modeType 적용할 모드 타입

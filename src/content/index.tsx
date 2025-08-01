@@ -1,13 +1,14 @@
-import { checkExtensionState } from "./storage/settingsManager";
-import { handleStyleMessage } from "./messageHandlers/styleMessageHandler";
-import { handleModalMessage } from "./messageHandlers/modalMessageHandler";
-import { processImages } from "./imageHandlers/imageProcessor";
-import { renderCouponComponent } from "./coupang/renderCouponComponent";
-import { initDomObserver } from "./observers/domObserver";
-import { detectCategoryType } from "./coupang/categoryHandler/detectCategory";
+import { checkExtensionState } from "./core/storage/settingsManager";
+import { processImages } from "./utils/imageHandlers/imageProcessor";
+import { renderCouponComponent } from "./features/coupang/renderCouponComponent";
+import { initDomObserver } from "./utils/observers/domObserver";
+import { detectCategoryType } from "./features/coupang/categoryHandler/detectCategory";
 import { createRoot } from "react-dom/client";
 import App from "../iframe/iframe";
 import React from "react";
+import { contentServiceManager } from "./core/services/ContentServiceManager";
+import { contentMessageService } from "./core/services/ContentMessageService";
+import { logger } from "@src/utils/logger";
 
 if (window.self !== window.top) {
     const container = document.getElementById("voim-root");
@@ -17,7 +18,24 @@ if (window.self !== window.top) {
     }
 }
 
-checkExtensionState();
+// 싱글턴 서비스 초기화
+async function initializeServices() {
+    try {
+        await contentServiceManager.initialize();
+        contentMessageService.initialize();
+
+        // 기존 기능들 초기화
+        checkExtensionState();
+        renderCouponComponent();
+
+        logger.debug("Content script 서비스 초기화 완료");
+    } catch (error) {
+        logger.error("Content script 서비스 초기화 중 오류:", error);
+    }
+}
+
+// 서비스 초기화 실행
+initializeServices();
 
 document.addEventListener("DOMContentLoaded", () => {
     checkExtensionState();
@@ -27,17 +45,6 @@ document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
         checkExtensionState();
     }
-});
-
-renderCouponComponent();
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    handleStyleMessage(message, sendResponse);
-    return true;
-});
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    return handleModalMessage(message, sendResponse);
 });
 
 initDomObserver(() => true);
@@ -110,39 +117,7 @@ const waitForEl = (
         }, timeout);
     });
 };
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === "GET_PRODUCT_TITLE") {
-        const titleEl = document.querySelector("h1.prod-buy-header__title");
-        const title = titleEl?.textContent?.trim() ?? "";
-        console.debug("[voim][content] 추출된 title:", title);
-        sendResponse({ title });
-        return true;
-    }
-    return false;
-});
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === "GET_VENDOR_HTML") {
-        waitForEl(".vendor-item").then((vendorEl) => {
-            if (!vendorEl) {
-                console.warn("[voim][content] .vendor-item 감지 실패");
-                sendResponse({ html: "", productId: "" });
-                return;
-            }
-
-            const rawHtml = vendorEl.outerHTML
-                .replace(/\sonerror=\"[^\"]*\"/g, "")
-                .replace(/\n/g, "")
-                .trim();
-
-            const match = window.location.href.match(/products\/(\d+)/);
-            const productId = match?.[1] ?? "";
-
-            sendResponse({ html: rawHtml, productId });
-        });
-
-        return true;
-    }
-});
+// 메시지 서비스가 모든 메시지를 처리하므로 중복 리스너 제거
 
 const isProductDetailPage = () => {
     return window.location.href.includes("/products/");
@@ -214,7 +189,7 @@ if (isProductDetailPage() || isCartPage()) {
 // 장바구니 데이터 추출 및 전송
 const extractAndSendCartData = () => {
     if (isCartPage()) {
-        import("./coupang/cartHandler").then(
+        import("./features/coupang/cartHandler").then(
             ({ sendCartItemsToBackground }) => {
                 sendCartItemsToBackground();
             },

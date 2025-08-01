@@ -24,10 +24,3 @@ export type MessageType =
     | "TOGGLE_MODAL"
     | "TOGGLE_SIDEBAR"
     | "APPLY_SETTINGS";
-
-export type CommandType = string;
-
-export type KnownCommandType =
-    | "toggle_iframe"
-    | "toggle-modal"
-    | "toggle-all-features";

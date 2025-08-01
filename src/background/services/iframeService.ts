@@ -1,4 +1,5 @@
 import { logger } from "@src/utils/logger";
+import { IFRAME_CONSTANTS } from "../constants";
 
 type IframeStyle = {
     position: string;
@@ -11,32 +12,53 @@ type IframeStyle = {
     zIndex: string;
 };
 
-const IFRAME_CONSTANTS = {
-    ID: "floating-button-extension-iframe",
-    STYLES: {
-        DEFAULT: {
-            position: "fixed",
-            top: "70px",
-            right: "20px",
-            width: "65px",
-            height: "130px",
-            border: "none",
-            background: "transparent",
-            zIndex: "2147483647",
-        } as IframeStyle,
-        EXPANDED: {
-            width: "100%",
-            height: "100%",
-            top: "0",
-            right: "0",
-        } as Partial<IframeStyle>,
-    },
-} as const;
+type IframeState = {
+    isVisible: boolean;
+    hiddenByAltA: boolean;
+    hiddenByAltV: boolean;
+};
 
 /**
- * iframe 관련 서비스
+ * iframe 관련 서비스 (싱글턴)
+ * 모든 iframe 생성, 제거, 상태 관리를 중앙에서 처리합니다.
  */
 class IframeService {
+    private static instance: IframeService;
+    private isInitialized: boolean = false;
+
+    private constructor() {
+        // private constructor to prevent direct instantiation
+    }
+
+    /**
+     * 싱글턴 인스턴스를 반환합니다.
+     */
+    public static getInstance(): IframeService {
+        if (!IframeService.instance) {
+            IframeService.instance = new IframeService();
+        }
+        return IframeService.instance;
+    }
+
+    /**
+     * 서비스를 초기화합니다.
+     */
+    public async initialize(): Promise<void> {
+        if (this.isInitialized) {
+            logger.debug("IframeService가 이미 초기화되었습니다.");
+            return;
+        }
+
+        try {
+            logger.debug("IframeService 초기화 시작");
+            this.isInitialized = true;
+            logger.debug("IframeService 초기화 완료");
+        } catch (error) {
+            logger.error("IframeService 초기화 중 오류:", error);
+            throw error;
+        }
+    }
+
     /**
      * iframe의 스타일을 설정합니다.
      */
@@ -72,73 +94,152 @@ class IframeService {
     }
 
     /**
-     * iframe을 생성하고 설정합니다.
-     */
-    private createIframe(iframeId: string): HTMLIFrameElement {
-        const iframe = document.createElement("iframe");
-        iframe.id = iframeId;
-        iframe.src = chrome.runtime.getURL("iframe.html");
-        iframe.setAttribute("tabindex", "1");
-        this.setIframeStyles(iframe);
-
-        iframe.onload = () => {
-            iframe.focus();
-            iframe.contentWindow?.document.getElementById("root")?.focus();
-        };
-
-        return iframe;
-    }
-
-    /**
      * iframe 토글 스크립트를 실행합니다.
      */
-    private async executeToggleScript(tabId: number): Promise<void> {
+    private async executeToggleScript(
+        tabId: number,
+        action: "TOGGLE" | "TOGGLE_MODAL" | "TOGGLE_SIDEBAR" | "TOGGLE_STYLE",
+        wasHiddenByAltV?: boolean,
+    ): Promise<void> {
         await chrome.scripting.executeScript({
             target: { tabId },
             func: (
                 iframeId: string,
-                styles: typeof IFRAME_CONSTANTS.STYLES,
+                defaultStyles: Record<string, string>,
+                expandedStyles: Record<string, string>,
+                actionStr: string,
+                wasHiddenByAltVBool: boolean,
             ) => {
                 try {
-                    const existingIframe = document.getElementById(iframeId);
-                    if (existingIframe) {
-                        existingIframe.remove();
-                        return;
-                    }
+                    const existingIframe = document.getElementById(
+                        iframeId,
+                    ) as HTMLIFrameElement;
 
-                    const iframe = document.createElement("iframe");
-                    iframe.id = iframeId;
-                    iframe.src = chrome.runtime.getURL("iframe.html");
+                    // 스토리지 상태를 먼저 확인
+                    chrome.storage.local.get(
+                        [
+                            "iframeInvisible",
+                            "iframeHiddenByAltA",
+                            "iframeHiddenByAltV",
+                        ],
+                        (result) => {
+                            const isInvisible = result.iframeInvisible ?? false;
+                            const hiddenByAltA =
+                                result.iframeHiddenByAltA ?? false;
+                            const hiddenByAltV =
+                                result.iframeHiddenByAltV ?? false;
 
-                    // 스타일 설정
-                    Object.entries(styles.DEFAULT).forEach(([key, value]) => {
-                        iframe.style[key as any] = value;
-                    });
+                            // ALT+A로 숨겨진 경우 처리
+                            if (
+                                actionStr === "TOGGLE_STYLE" &&
+                                wasHiddenByAltVBool &&
+                                !existingIframe
+                            ) {
+                                chrome.storage.local.set({
+                                    iframeInvisible: true,
+                                    iframeHiddenByAltA: true,
+                                    iframeHiddenByAltV: false,
+                                });
+                                return;
+                            }
 
-                    document.body.appendChild(iframe);
+                            // iframe이 존재하면 제거
+                            if (existingIframe) {
+                                existingIframe.remove();
+                                chrome.storage.local.set({
+                                    iframeInvisible: true,
+                                    iframeHiddenByAltA:
+                                        actionStr === "TOGGLE_STYLE",
+                                    iframeHiddenByAltV:
+                                        actionStr === "TOGGLE" ||
+                                        actionStr === "TOGGLE_MODAL" ||
+                                        actionStr === "TOGGLE_SIDEBAR",
+                                });
+                                return;
+                            }
 
-                    // 메시지 핸들러 설정
-                    window.addEventListener("message", function (event) {
-                        if (event.source !== iframe.contentWindow) return;
+                            // iframe이 없고 숨겨진 상태일 때만 생성
+                            if (isInvisible) {
+                                // ALT+A로 숨겨진 경우에는 iframe을 생성하지 않음
+                                if (hiddenByAltA) {
+                                    return;
+                                }
 
-                        if (event.data.type === "RESIZE_IFRAME") {
-                            const newStyles = event.data.isOpen
-                                ? { ...styles.DEFAULT, ...styles.EXPANDED }
-                                : styles.DEFAULT;
+                                // iframe 생성
+                                const iframe = document.createElement("iframe");
+                                iframe.id = iframeId;
+                                iframe.src =
+                                    chrome.runtime.getURL("iframe.html");
+                                iframe.setAttribute("tabindex", "1");
 
-                            Object.entries(newStyles).forEach(
-                                ([key, value]) => {
-                                    iframe.style[key as any] = value;
-                                },
-                            );
-                        }
-                    });
+                                // 스타일 설정
+                                Object.entries(defaultStyles).forEach(
+                                    ([key, value]) => {
+                                        iframe.style[key as any] = value;
+                                    },
+                                );
+
+                                // 메시지 핸들러 설정
+                                const handleMessage = function (
+                                    event: MessageEvent,
+                                ) {
+                                    if (event.source !== iframe.contentWindow)
+                                        return;
+
+                                    if (event.data.type === "RESIZE_IFRAME") {
+                                        const newStyles = event.data.isOpen
+                                            ? {
+                                                  ...defaultStyles,
+                                                  ...expandedStyles,
+                                              }
+                                            : defaultStyles;
+
+                                        Object.entries(newStyles).forEach(
+                                            ([key, value]) => {
+                                                iframe.style[key as any] =
+                                                    value;
+                                            },
+                                        );
+                                    }
+                                };
+
+                                window.addEventListener(
+                                    "message",
+                                    handleMessage,
+                                );
+                                document.body.appendChild(iframe);
+
+                                // 상태 저장
+                                chrome.storage.local.set({
+                                    iframeInvisible: false,
+                                    iframeHiddenByAltA: false,
+                                    iframeHiddenByAltV: false,
+                                });
+
+                                // iframe 로드 후 액션 실행
+                                iframe.onload = function () {
+                                    if (iframe.contentWindow) {
+                                        iframe.contentWindow.postMessage(
+                                            { type: actionStr },
+                                            "*",
+                                        );
+                                    }
+                                };
+                            }
+                        },
+                    );
                 } catch (error) {
                     console.error("iframe 토글 중 오류:", error);
                     throw error;
                 }
             },
-            args: [IFRAME_CONSTANTS.ID, IFRAME_CONSTANTS.STYLES],
+            args: [
+                IFRAME_CONSTANTS.ID,
+                IFRAME_CONSTANTS.STYLES.DEFAULT,
+                IFRAME_CONSTANTS.STYLES.EXPANDED,
+                action,
+                wasHiddenByAltV ?? false,
+            ],
         });
     }
 
@@ -159,7 +260,7 @@ class IframeService {
             }
 
             logger.debug(`탭 ID ${tabs[0].id}에 스크립트 주입 시도`);
-            await this.executeToggleScript(tabs[0].id);
+            await this.executeToggleScript(tabs[0].id, "TOGGLE");
             logger.debug("스크립트 성공적으로 주입됨");
         } catch (error) {
             logger.error("iframe 토글 중 오류:", error);
@@ -182,15 +283,122 @@ class IframeService {
                 return;
             }
 
-            await chrome.tabs.sendMessage(tabs[0].id, {
-                action: "TOGGLE_MODAL",
-            });
+            await this.executeToggleScript(tabs[0].id, "TOGGLE_MODAL");
             logger.debug("모달 토글 메시지 전송 완료");
         } catch (error) {
             logger.error("모달 토글 메시지 전송 중 오류:", error);
             throw error;
         }
     }
+
+    /**
+     * 현재 활성화된 탭에 사이드바를 토글하는 메시지를 보냅니다.
+     */
+    async toggleSidebarInActiveTab(): Promise<void> {
+        try {
+            const tabs = await chrome.tabs.query({
+                active: true,
+                currentWindow: true,
+            });
+
+            if (!tabs?.[0]?.id) {
+                logger.error("활성화된 탭을 찾을 수 없거나 탭 ID가 없습니다");
+                return;
+            }
+
+            await this.executeToggleScript(tabs[0].id, "TOGGLE_SIDEBAR");
+            logger.debug("사이드바 토글 메시지 전송 완료");
+        } catch (error) {
+            logger.error("사이드바 토글 메시지 전송 중 오류:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * 현재 활성화된 탭에 스타일 토글을 실행합니다.
+     */
+    async toggleStyleInActiveTab(wasHiddenByAltV: boolean): Promise<void> {
+        try {
+            const tabs = await chrome.tabs.query({
+                active: true,
+                currentWindow: true,
+            });
+
+            if (!tabs?.[0]?.id) {
+                logger.error("활성화된 탭을 찾을 수 없거나 탭 ID가 없습니다");
+                return;
+            }
+
+            await this.executeToggleScript(
+                tabs[0].id,
+                "TOGGLE_STYLE",
+                wasHiddenByAltV,
+            );
+            logger.debug("스타일 토글 메시지 전송 완료");
+        } catch (error) {
+            logger.error("스타일 토글 메시지 전송 중 오류:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * iframe 상태를 가져옵니다.
+     */
+    async getIframeState(): Promise<IframeState> {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(
+                ["iframeInvisible", "iframeHiddenByAltA", "iframeHiddenByAltV"],
+                (result) => {
+                    resolve({
+                        isVisible: !(result.iframeInvisible ?? false),
+                        hiddenByAltA: result.iframeHiddenByAltA ?? false,
+                        hiddenByAltV: result.iframeHiddenByAltV ?? false,
+                    });
+                },
+            );
+        });
+    }
+
+    /**
+     * iframe 상태를 설정합니다.
+     */
+    async setIframeState(state: Partial<IframeState>): Promise<void> {
+        const updates: Record<string, any> = {};
+
+        if (state.isVisible !== undefined) {
+            updates.iframeInvisible = !state.isVisible;
+        }
+        if (state.hiddenByAltA !== undefined) {
+            updates.iframeHiddenByAltA = state.hiddenByAltA;
+        }
+        if (state.hiddenByAltV !== undefined) {
+            updates.iframeHiddenByAltV = state.hiddenByAltV;
+        }
+
+        await chrome.storage.local.set(updates);
+    }
+
+    /**
+     * 서비스의 초기화 상태를 확인합니다.
+     */
+    public isReady(): boolean {
+        return this.isInitialized;
+    }
+
+    /**
+     * 서비스를 정리합니다.
+     */
+    public async cleanup(): Promise<void> {
+        try {
+            logger.debug("IframeService 정리 시작");
+            this.isInitialized = false;
+            logger.debug("IframeService 정리 완료");
+        } catch (error) {
+            logger.error("IframeService 정리 중 오류:", error);
+            throw error;
+        }
+    }
 }
 
-export const iframeService = new IframeService();
+// 싱글턴 인스턴스 내보내기
+export const iframeService = IframeService.getInstance();

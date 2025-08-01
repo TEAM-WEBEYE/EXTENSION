@@ -1,7 +1,7 @@
 import {
     collectCoupangReviewData,
     sendReviewSummaryRequest,
-} from "../apiSetting/sendReviewSummaryRequest";
+} from "@src/content/features/api/sendReviewSummaryRequest";
 
 interface ReviewSummary {
     totalCount: number;

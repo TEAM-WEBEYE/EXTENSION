@@ -1,4 +1,4 @@
-import { EXTENSION_IFRAME_ID } from "../constants";
+import { EXTENSION_IFRAME_ID } from "@src/content/constants";
 
 let currentListener: ((event: MessageEvent) => void) | null = null;
 

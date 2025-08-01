@@ -1,6 +1,6 @@
 import React from "react";
+import { ControlImage } from "@src/components/imageCheck/controlImage";
 import { createRoot } from "react-dom/client";
-import { ControlImage } from "../../components/imageCheck/controlImage";
 
 export const isIgnorableImage = (img: HTMLImageElement): boolean => {
     const alt = img.alt?.toLowerCase() ?? "";
