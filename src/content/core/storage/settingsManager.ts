@@ -1,7 +1,24 @@
-import { DEFAULT_FONT_SIZE, DEFAULT_FONT_WEIGHT, DEFAULT_THEME, STORAGE_KEYS } from "@src/background/constants";
-import { EXTENSION_IFRAME_ID, fontSizeMap, fontWeightMap } from "@src/content/constants";
-import { FontSizeType, FontStyle, FontWeightType, ModeType } from "@src/content/types";
-import { removeIframe, restoreIframe } from "@src/content/utils/iframe/iframeManager";
+import {
+    DEFAULT_FONT_SIZE,
+    DEFAULT_FONT_WEIGHT,
+    DEFAULT_THEME,
+    STORAGE_KEYS,
+} from "@src/background/constants";
+import {
+    EXTENSION_IFRAME_ID,
+    fontSizeMap,
+    fontWeightMap,
+} from "@src/content/constants";
+import {
+    FontSizeType,
+    FontStyle,
+    FontWeightType,
+    ModeType,
+} from "@src/content/types";
+import {
+    removeIframe,
+    restoreIframe,
+} from "@src/content/utils/iframe/iframeManager";
 import { applyFontStyle, applyModeStyle } from "../styles";
 
 let originalSettings: {
@@ -286,20 +303,6 @@ export function loadAndApplySettings(): void {
  */
 export function removeAllStyleSheets(): void {
     chrome.storage.local.set({ [STORAGE_KEYS.STYLES_ENABLED]: false }, () => {
-        // 모든 요소의 스타일 속성 제거
-        const elements = document.querySelectorAll("*");
-        elements.forEach((el) => {
-            const htmlEl = el as HTMLElement;
-            if (htmlEl.style) {
-                htmlEl.style.removeProperty("fontSize");
-                htmlEl.style.removeProperty("fontWeight");
-                htmlEl.style.removeProperty("filter");
-                htmlEl.style.removeProperty("backgroundColor");
-                htmlEl.style.removeProperty("color");
-                htmlEl.style.removeProperty("border-color");
-            }
-        });
-
         // 테마 모드 스타일시트 제거
         const modeStyle = document.getElementById("voim-mode-style");
         if (modeStyle) {
